@@ -53,6 +53,8 @@ class HomeFragment : Fragment() {
         liveCaptureButton.setOnClickListener {
             navigateToCameraFragment()
         }
+
+
     }
 
     private fun navigateToCameraFragment() {

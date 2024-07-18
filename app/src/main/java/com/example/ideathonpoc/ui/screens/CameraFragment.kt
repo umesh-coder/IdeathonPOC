@@ -1,7 +1,6 @@
 package com.example.ideathonpoc.ui.screens
 
 import android.Manifest
-import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.Matrix
@@ -21,7 +20,6 @@ import com.example.ideathonpoc.databinding.FragmentCameraBinding
 import com.example.ideathonpoc.ui.modelfiles.BoundingBox
 import com.example.ideathonpoc.ui.modelfiles.Constants
 import com.example.ideathonpoc.ui.modelfiles.Detector
-import com.example.ideathonpoc.ui.screens.HomeFragment.Companion
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
@@ -30,7 +28,8 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
     private var _binding: FragmentCameraBinding? = null
     private val binding get() = _binding!!
 
-    private val isFrontCamera = false
+    private var isFrontCamera = false
+    private var cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
 
     private var preview: Preview? = null
     private var imageAnalyzer: ImageAnalysis? = null
@@ -82,6 +81,10 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
             Log.e(TAG, "Error in onViewCreated", e)
             navigateBack()
         }
+
+        binding.switchCameraButton.setOnClickListener {
+            switchCamera()
+        }
     }
 
     override fun onPause() {
@@ -104,6 +107,16 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
         parentFragmentManager.popBackStack()
     }
 
+    private fun switchCamera() {
+        isFrontCamera = !isFrontCamera
+        cameraSelector = if (isFrontCamera) {
+            CameraSelector.DEFAULT_FRONT_CAMERA
+        } else {
+            CameraSelector.DEFAULT_BACK_CAMERA
+        }
+        startCamera()
+    }
+
     private fun cleanupResources() {
         try {
             imageAnalyzer?.clearAnalyzer()
@@ -113,8 +126,6 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
         } catch (e: Exception) {
         }
     }
-
-
 
     private fun startCamera() {
         val cameraProviderFuture = ProcessCameraProvider.getInstance(requireContext())
@@ -138,10 +149,6 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
 
         try {
             val rotation = binding.viewFinder.display.rotation
-
-            val cameraSelector = CameraSelector.Builder()
-                .requireLensFacing(CameraSelector.LENS_FACING_BACK)
-                .build()
 
             preview = Preview.Builder()
                 .setTargetAspectRatio(AspectRatio.RATIO_4_3)
