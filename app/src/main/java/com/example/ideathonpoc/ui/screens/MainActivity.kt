@@ -24,7 +24,7 @@ class MainActivity : AppCompatActivity() {
                     true
                 }
                 R.id.message -> {
-                    loadFragment("ResultFragment")
+//                    loadFragment("ResultFragment")
                     true
                 }
                 R.id.settings -> {
