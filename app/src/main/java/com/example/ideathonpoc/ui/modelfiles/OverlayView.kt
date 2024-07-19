@@ -1,6 +1,7 @@
 package com.example.ideathonpoc.ui.modelfiles
 
 import android.content.Context
+import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
@@ -22,8 +23,11 @@ class OverlayView(context: Context?, attrs: AttributeSet?) : View(context, attrs
     }
 
     fun clear() {
-        results = listOf() // Clear the results
+        textPaint.reset()
+        textBackgroundPaint.reset()
+        boxPaints.clear()
         invalidate()
+        initPaints()
     }
 
     private fun initPaints() {
@@ -46,8 +50,8 @@ class OverlayView(context: Context?, attrs: AttributeSet?) : View(context, attrs
             Color.WHITE
         )
 
-        // Replace these with your actual class names
-        val classNames = listOf("Class1", "Class2", "Class3", "Class4", "Class5", "Class6", "Class7")
+        // Assuming you have 7 class names, replace these with your actual class names
+        val classNames = listOf("Gloves", "Helmet", "Mask", "Person", "Safety Glasses", "Safety Shoe", "Safety Vest")
 
         classNames.forEachIndexed { index, className ->
             boxPaints[className] = Paint().apply {

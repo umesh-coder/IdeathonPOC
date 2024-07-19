@@ -16,7 +16,6 @@ class HomeFragment : Fragment() {
     private var _binding: FragmentHomeBinding? = null
     private val binding get() = _binding!!
 
-    private lateinit var captureImageButton: Button
     private lateinit var liveCaptureButton: ImageButton
 
     override fun onCreateView(
@@ -31,7 +30,6 @@ class HomeFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         try {
-            captureImageButton = binding.captureImage
             liveCaptureButton = binding.liveCapture
 
             setupButtons()
@@ -46,10 +44,6 @@ class HomeFragment : Fragment() {
     }
 
     private fun setupButtons() {
-        captureImageButton.setOnClickListener {
-            navigateToCameraFragment()
-        }
-
         liveCaptureButton.setOnClickListener {
             navigateToCameraFragment()
         }
