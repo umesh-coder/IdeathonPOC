@@ -46,16 +46,6 @@
                 android:background="@drawable/scan_placeholder_border"
                 android:src="@drawable/scan_placeholder" />
 
-            <androidx.appcompat.widget.AppCompatButton
-                android:background="@drawable/scan_placeholder_border"
-                android:id="@+id/capture_image"
-                android:textSize="16dp"
-                android:textStyle="bold"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:text="Capture Image" />
-
         </LinearLayout>
 
     </androidx.cardview.widget.CardView>

@@ -7,13 +7,11 @@ import android.graphics.Paint
 import android.graphics.Rect
 import android.util.AttributeSet
 import android.view.View
-import androidx.core.content.ContextCompat
-import com.example.ideathonpoc.R
 
 class OverlayView(context: Context?, attrs: AttributeSet?) : View(context, attrs) {
 
     private var results = listOf<BoundingBox>()
-    private var boxPaint = Paint()
+    private var boxPaints = mutableMapOf<String, Paint>()
     private var textBackgroundPaint = Paint()
     private var textPaint = Paint()
 
@@ -24,11 +22,8 @@ class OverlayView(context: Context?, attrs: AttributeSet?) : View(context, attrs
     }
 
     fun clear() {
-        textPaint.reset()
-        textBackgroundPaint.reset()
-        boxPaint.reset()
+        results = listOf() // Clear the results
         invalidate()
-        initPaints()
     }
 
     private fun initPaints() {
@@ -40,22 +35,46 @@ class OverlayView(context: Context?, attrs: AttributeSet?) : View(context, attrs
         textPaint.style = Paint.Style.FILL
         textPaint.textSize = 50f
 
-        boxPaint.color = ContextCompat.getColor(context!!, R.color.bounding_box_color)
-        boxPaint.strokeWidth = 8F
-        boxPaint.style = Paint.Style.STROKE
+        // Initialize 7 different colors for the 7 classes
+        val colors = listOf(
+            Color.RED,
+            Color.GREEN,
+            Color.BLUE,
+            Color.YELLOW,
+            Color.CYAN,
+            Color.MAGENTA,
+            Color.WHITE
+        )
+
+        // Replace these with your actual class names
+        val classNames = listOf("Class1", "Class2", "Class3", "Class4", "Class5", "Class6", "Class7")
+
+        classNames.forEachIndexed { index, className ->
+            boxPaints[className] = Paint().apply {
+                color = colors[index]
+                strokeWidth = 8F
+                style = Paint.Style.STROKE
+            }
+        }
     }
 
-    override fun draw(canvas: Canvas) {
-        super.draw(canvas)
+    private fun getBoxPaint(className: String): Paint {
+        return boxPaints[className] ?: boxPaints.values.first()
+    }
 
-        results.forEach {
-            val left = it.x1 * width
-            val top = it.y1 * height
-            val right = it.x2 * width
-            val bottom = it.y2 * height
+    override fun onDraw(canvas: Canvas) {
+        super.onDraw(canvas)
 
+        results.forEach { box ->
+            val left = box.x1 * width
+            val top = box.y1 * height
+            val right = box.x2 * width
+            val bottom = box.y2 * height
+
+            val boxPaint = getBoxPaint(box.clsName)
             canvas.drawRect(left, top, right, bottom, boxPaint)
-            val drawableText = it.clsName
+
+            val drawableText = "${box.clsName} (${String.format("%.2f", box.cnf)})"
 
             textBackgroundPaint.getTextBounds(drawableText, 0, drawableText.length, bounds)
             val textWidth = bounds.width()
@@ -68,7 +87,6 @@ class OverlayView(context: Context?, attrs: AttributeSet?) : View(context, attrs
                 textBackgroundPaint
             )
             canvas.drawText(drawableText, left, top + bounds.height(), textPaint)
-
         }
     }
 
