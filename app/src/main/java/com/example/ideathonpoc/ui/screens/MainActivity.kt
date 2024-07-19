@@ -2,35 +2,38 @@ package com.example.ideathonpoc.ui.screens
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
-import androidx.fragment.app.Fragment
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.example.ideathonpoc.R
 import com.google.android.material.bottomnavigation.BottomNavigationView
 
 class MainActivity : AppCompatActivity() {
 
-    lateinit var bottomNav : BottomNavigationView
+    lateinit var bottomNav: BottomNavigationView
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
 
+        super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
         loadFragment("HomeFragment")
-        bottomNav = findViewById(R.id.bottomNav) as BottomNavigationView
+        bottomNav = findViewById<BottomNavigationView>(R.id.bottomNav)!!
         bottomNav.setOnItemSelectedListener {
             when (it.itemId) {
                 R.id.home -> {
                     loadFragment("HomeFragment")
                     true
                 }
+
                 R.id.message -> {
 //                    loadFragment("ResultFragment")
                     true
                 }
+
                 R.id.settings -> {
                     loadFragment("AboutFragment")
                     true
                 }
+
                 else -> false
             }
         }

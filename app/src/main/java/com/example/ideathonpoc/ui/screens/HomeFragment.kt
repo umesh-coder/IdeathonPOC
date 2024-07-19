@@ -5,7 +5,6 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
 import android.widget.ImageButton
 import androidx.fragment.app.Fragment
 import com.example.ideathonpoc.R
@@ -28,7 +27,6 @@ class HomeFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
         try {
             liveCaptureButton = binding.liveCapture
 
@@ -36,11 +34,6 @@ class HomeFragment : Fragment() {
         } catch (e: Exception) {
             Log.e(TAG, "Error in onViewCreated", e)
         }
-    }
-
-    override fun onResume() {
-        super.onResume()
-
     }
 
     private fun setupButtons() {

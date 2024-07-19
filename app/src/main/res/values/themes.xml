@@ -33,4 +33,14 @@
         <item name="windowSplashScreenAnimatedIcon">@drawable/splash_screen_icon</item>
         <item name="postSplashScreenTheme">@style/Base.Theme.IdeathonPoc</item>
     </style>
+
+    <style name="Theme.App.SplashScreen1" parent="Theme.SplashScreen">
+        <!-- Remove the action bar. -->
+        <item name="windowActionBar">false</item>
+        <item name="android:windowFullscreen">false</item>
+        <item name="windowNoTitle">true</item>
+        <item name="windowSplashScreenBackground">@color/white</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_screen_icon</item>
+        <item name="postSplashScreenTheme">@style/Base.Theme.IdeathonPoc</item>
+    </style>
 </resources>

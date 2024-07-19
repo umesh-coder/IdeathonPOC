@@ -1,15 +1,15 @@
 package com.example.ideathonpoc.ui.screens
 
-import android.os.Bundle
 import android.content.Intent
+import android.os.Bundle
 import android.text.Html
 import android.view.View
 import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
-import androidx.viewpager.widget.ViewPager
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.viewpager.widget.ViewPager
 import com.example.ideathonpoc.R
 import com.example.ideathonpoc.ui.adapters.OnboardingAdapter
 
@@ -40,7 +40,7 @@ class OnboardingTutorial : AppCompatActivity() {
         }
 
         nextbtn.setOnClickListener {
-            if (getitem(0) < 3) {
+            if (getitem(0) < 4) {
                 mSLideViewPager.currentItem = getitem(1)
             } else {
                 val i = Intent(this@OnboardingTutorial, MainActivity::class.java)
@@ -50,9 +50,7 @@ class OnboardingTutorial : AppCompatActivity() {
         }
 
         skipbtn.setOnClickListener {
-            val i = Intent(this@OnboardingTutorial, MainActivity::class.java)
-            startActivity(i)
-            finish()
+            showSplashAndTransition()
         }
 
         mSLideViewPager = findViewById(R.id.slideViewPager)
@@ -67,7 +65,7 @@ class OnboardingTutorial : AppCompatActivity() {
     }
 
     private fun setUpindicator(position: Int) {
-        dots = arrayOfNulls(4)
+        dots = arrayOfNulls(5)
         mDotLayout.removeAllViews()
 
         for (i in dots.indices) {
@@ -83,7 +81,12 @@ class OnboardingTutorial : AppCompatActivity() {
     }
 
     private val viewListener = object : ViewPager.OnPageChangeListener {
-        override fun onPageScrolled(position: Int, positionOffset: Float, positionOffsetPixels: Int) {}
+        override fun onPageScrolled(
+            position: Int,
+            positionOffset: Float,
+            positionOffsetPixels: Int
+        ) {
+        }
 
         override fun onPageSelected(position: Int) {
             setUpindicator(position)
@@ -96,6 +99,13 @@ class OnboardingTutorial : AppCompatActivity() {
 
     private fun getitem(i: Int): Int {
         return mSLideViewPager.currentItem + i
+    }
+
+    private fun showSplashAndTransition() {
+        // Show splash screen before transition
+        val i = Intent(this@OnboardingTutorial, MainActivity::class.java)
+        startActivity(i)
+        finish()
     }
 }
 

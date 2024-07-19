@@ -10,12 +10,14 @@
     <string name="heading_two">Capture Your Image</string>
     <string name="heading_three">Check Your PPE Kit</string>
     <string name="heading_fourth">View Your Results</string>
+    <string name="heading_fifth">Required PPE Kit</string>
 
     <!--    //onboarding Description-->
     <string name="desc_one">Ensure your safety by verifying if you are wearing the necessary Personal Protective Equipment (PPE). Let\'s get started!</string>
     <string name="desc_two">Stand straight and take a full-body picture to check your PPE kit. Make sure the lighting is adequate for a clear image.</string>
     <string name="desc_three">Click on the "Check PPE Kit" button to analyze your image. Our app will detect if you\'re wearing the required PPE.</string>
     <string name="desc_fourth">See the results of the PPE check. Ensure all necessary items are worn for your safety. Stay protected!</string>
+    <string name="desc_fifth">👷</string>
     <string name="bottom_nav_home">Home</string>
     <string name="bottom_nav_result">Results</string>
     <string name="bottom_nav_about">About</string>

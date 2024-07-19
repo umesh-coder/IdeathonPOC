@@ -36,9 +36,9 @@ android {
         jvmTarget = "1.8"
     }
 
-    buildFeatures{
-        mlModelBinding=true
-        viewBinding=true
+    buildFeatures {
+        mlModelBinding = true
+        viewBinding = true
     }
 }
 
@@ -53,10 +53,13 @@ dependencies {
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     val cameraxVersion = "1.4.0-alpha03"
+    val lottieVersion = "3.4.0"
     implementation("androidx.camera:camera-camera2:${cameraxVersion}")
     implementation("androidx.camera:camera-lifecycle:${cameraxVersion}")
     implementation("androidx.camera:camera-view:${cameraxVersion}")
 
     implementation("org.tensorflow:tensorflow-lite:2.14.0")
     implementation("org.tensorflow:tensorflow-lite-support:0.4.4")
+
+    implementation("com.airbnb.android:lottie:$lottieVersion")
 }
