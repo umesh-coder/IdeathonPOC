@@ -1,10 +1,15 @@
 package com.example.ideathonpoc.ui.screens
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.Canvas
 import android.graphics.Matrix
+import android.net.Uri
 import android.os.Bundle
+import android.provider.MediaStore
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -14,12 +19,17 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.core.*
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.content.ContextCompat
+import androidx.core.view.drawToBitmap
 import androidx.fragment.app.Fragment
 import com.example.ideathonpoc.R
 import com.example.ideathonpoc.databinding.FragmentCameraBinding
 import com.example.ideathonpoc.ui.modelfiles.BoundingBox
 import com.example.ideathonpoc.ui.modelfiles.Constants
 import com.example.ideathonpoc.ui.modelfiles.Detector
+import java.io.File
+import java.io.FileOutputStream
+import java.io.IOException
+import java.nio.file.Files.createFile
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
@@ -27,7 +37,7 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
 
     private var _binding: FragmentCameraBinding? = null
     private val binding get() = _binding!!
-
+    private var latestFrame: Bitmap? = null
     private var isFrontCamera = false
     private var cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
 
@@ -37,6 +47,7 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
     private var cameraProvider: ProcessCameraProvider? = null
     private lateinit var detector: Detector
     private lateinit var cameraExecutor: ExecutorService
+    private lateinit var requiredSafetyItems: List<String>
 
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
@@ -54,6 +65,8 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
         savedInstanceState: Bundle?
     ): View {
         _binding = FragmentCameraBinding.inflate(inflater, container, false)
+        requiredSafetyItems = listOf("Helmet", "Safety Vest","Gloves")
+
         return binding.root
     }
 
@@ -61,7 +74,7 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
         super.onViewCreated(view, savedInstanceState)
 
         try {
-            detector = Detector(requireContext(), Constants.MODEL_PATH, Constants.LABELS_PATH, this)
+            detector = Detector(requireContext(), Constants.MODEL_PATH, Constants.LABELS_PATH, this,requiredSafetyItems)
             detector.setup()
 
             if (allPermissionsGranted()) {
@@ -208,6 +221,7 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
                 matrix, true
             )
 
+            latestFrame = rotatedBitmap
             detector.detect(rotatedBitmap)
         } catch (e: Exception) {
             Log.e(TAG, "Error processing image", e)
@@ -241,5 +255,71 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
     companion object {
         private const val TAG = "CameraFragment"
         private val REQUIRED_PERMISSIONS = arrayOf(Manifest.permission.CAMERA)
+    }
+
+    override fun onAllRequiredItemsDetected() {
+        // This method will be called when all required safety items are detected
+        binding.root.postDelayed({
+            takeScreenshot()
+        }, 10)
+    }
+
+
+    private fun takeScreenshot() {
+        val imageCapture = ImageCapture.Builder()
+            .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
+            .setTargetRotation(binding.viewFinder.display.rotation)
+            .build()
+
+        // Unbind existing use cases and rebind with imageCapture
+        cameraProvider?.unbindAll()
+        camera = cameraProvider?.bindToLifecycle(
+            viewLifecycleOwner,
+            cameraSelector,
+            preview,
+            imageAnalyzer,
+            imageCapture
+        )
+
+        val outputDirectory = getOutputDirectory()
+        val photoFile = File(
+            outputDirectory,
+            "Screenshot_${System.currentTimeMillis()}.jpg"
+        )
+
+        val outputOptions = ImageCapture.OutputFileOptions.Builder(photoFile).build()
+
+        imageCapture.takePicture(
+            outputOptions,
+            ContextCompat.getMainExecutor(requireContext()),
+            object : ImageCapture.OnImageSavedCallback {
+                override fun onImageSaved(output: ImageCapture.OutputFileResults) {
+                    val savedUri = output.savedUri ?: Uri.fromFile(photoFile)
+                    Log.d(TAG, "Photo capture succeeded: $savedUri")
+
+                    // Navigate to ResultActivity with the captured image path
+                    navigateToResultActivity(photoFile.absolutePath, System.currentTimeMillis())
+                }
+
+                override fun onError(exc: ImageCaptureException) {
+                    Log.e(TAG, "Photo capture failed: ${exc.message}", exc)
+                }
+            }
+        )
+    }
+
+    private fun getOutputDirectory(): File {
+        val mediaDir = requireContext().externalMediaDirs.firstOrNull()?.let {
+            File(it, resources.getString(R.string.app_name)).apply { mkdirs() }
+        }
+        return if (mediaDir != null && mediaDir.exists()) mediaDir else requireContext().filesDir
+    }
+
+    private fun navigateToResultActivity(imagePath: String, timestamp: Long) {
+        val intent = Intent(requireContext(), ResultActivity::class.java).apply {
+            putExtra("imagePath", imagePath)
+            putExtra("timestamp", timestamp)
+        }
+        startActivity(intent)
     }
 }

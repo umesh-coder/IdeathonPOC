@@ -1,8 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
+
     <uses-permission android:name="android.permission.CAMERA" />
-    <uses-feature android:name="android.hardware.camera" android:required="true" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission
+        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        tools:ignore="ScopedStorage" />
+
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="true" />
 
     <application
         android:allowBackup="true"
@@ -15,9 +23,12 @@
         android:theme="@style/Theme.Material3.DayNight.NoActionBar"
         tools:targetApi="31">
         <activity
+            android:name=".ui.screens.ResultActivity"
+            android:exported="false" />
+        <activity
             android:name=".ui.screens.OnboardingTutorial"
-            android:theme="@style/Theme.App.SplashScreen"
-            android:exported="true">
+            android:exported="true"
+            android:theme="@style/Theme.App.SplashScreen">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -26,9 +37,7 @@
         </activity>
         <activity
             android:name=".ui.screens.MainActivity"
-            android:exported="false">
-
-        </activity>
+            android:exported="false"></activity>
 
         <meta-data
             android:name="preloaded_fonts"

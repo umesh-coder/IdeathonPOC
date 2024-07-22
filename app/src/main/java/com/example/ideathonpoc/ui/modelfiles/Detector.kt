@@ -21,12 +21,13 @@ class Detector(
     private val context: Context,
     private val modelPath: String,
     private val labelPath: String,
-    private val detectorListener: DetectorListener
+    private val detectorListener: DetectorListener,
+    private val requiredSafetyItems: List<String>
 ) {
 
     private var interpreter: Interpreter? = null
     private var labels = mutableListOf<String>()
-
+    private val detectedItems = mutableSetOf<String>()
     private var tensorWidth = 0
     private var tensorHeight = 0
     private var numChannel = 0
@@ -100,10 +101,14 @@ class Detector(
 
         if (bestBoxes == null) {
             detectorListener.onEmptyDetect()
-            return
+        }else {
+            detectorListener.onDetect(bestBoxes, inferenceTime)
         }
 
-        detectorListener.onDetect(bestBoxes, inferenceTime)
+        // Clear detected items after each frame
+        detectedItems.clear()
+
+
     }
 
     //    private fun bestBox(array: FloatArray) : List<BoundingBox>? {
@@ -153,8 +158,8 @@ class Detector(
 //
 //        return applyNMS(boundingBoxes)
 //    }
-    private fun bestBox(array: FloatArray): List<BoundingBox>? {
 
+    private fun bestBox(array: FloatArray): List<BoundingBox>? {
         val boundingBoxes = mutableListOf<BoundingBox>()
         val excludeClasses = setOf(
             "NO-Safety",
@@ -163,7 +168,7 @@ class Detector(
             "No-Helmet",
             "No-Mask",
             "noi"
-        ) // Add any other classes you want to exclude here
+        )
 
         for (c in 0 until numElements) {
             var maxConf = -1.0f
@@ -181,25 +186,16 @@ class Detector(
 
             if (maxConf > CONFIDENCE_THRESHOLD) {
                 val clsName = labels[maxIdx]
-                // Exclude this bounding box if it's a class in the exclude list
-                // You can add more classes to exclude here
-                if (clsName in excludeClasses) {
-                    Log.d("BoundingBox", "Excluded Class: $clsName")
-                    //dont draw bounding box
-                    continue
-                }
-                    val cx = array[c] // 0
-                    val cy = array[c + numElements] // 1
+                if (clsName !in excludeClasses) {
+                    val cx = array[c]
+                    val cy = array[c + numElements]
                     val w = array[c + numElements * 2]
                     val h = array[c + numElements * 3]
                     val x1 = cx - (w / 2F)
                     val y1 = cy - (h / 2F)
                     val x2 = cx + (w / 2F)
                     val y2 = cy + (h / 2F)
-                    if (x1 < 0F || x1 > 1F) continue
-                    if (y1 < 0F || y1 > 1F) continue
-                    if (x2 < 0F || x2 > 1F) continue
-                    if (y2 < 0F || y2 > 1F) continue
+                    if (x1 < 0F || x1 > 1F || y1 < 0F || y1 > 1F || x2 < 0F || x2 > 1F || y2 < 0F || y2 > 1F) continue
 
                     boundingBoxes.add(
                         BoundingBox(
@@ -209,13 +205,25 @@ class Detector(
                         )
                     )
 
+                    // Mark the item as detected
+                    if ( clsName in requiredSafetyItems ) {
+                        detectedItems.add(clsName)
+                    }
+                }
             }
+        }
+
+        // Check if all required items have been detected
+        if (detectedItems.size == requiredSafetyItems.size && detectedItems.containsAll(requiredSafetyItems)) {
+            detectorListener.onAllRequiredItemsDetected()
+            detectedItems.clear()
         }
 
         if (boundingBoxes.isEmpty()) return null
 
         return applyNMS(boundingBoxes)
     }
+
 
     private fun applyNMS(boxes: List<BoundingBox>): MutableList<BoundingBox> {
         val sortedBoxes = boxes.sortedByDescending { it.cnf }.toMutableList()
@@ -253,6 +261,7 @@ class Detector(
     interface DetectorListener {
         fun onEmptyDetect()
         fun onDetect(boundingBoxes: List<BoundingBox>, inferenceTime: Long)
+        fun onAllRequiredItemsDetected()
     }
 
     companion object {
