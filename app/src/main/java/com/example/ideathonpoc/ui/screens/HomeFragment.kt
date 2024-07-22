@@ -49,7 +49,7 @@ class HomeFragment : Fragment() {
             val cameraFragment = CameraFragment()
             parentFragmentManager.beginTransaction()
                 .replace(R.id.container, cameraFragment)
-                .addToBackStack(null)  // Add to back stack for proper back navigation
+                .addToBackStack(null)
                 .commit()
         } catch (e: Exception) {
             Log.e(TAG, "Error navigating to CameraFragment", e)

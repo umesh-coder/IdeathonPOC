@@ -11,7 +11,7 @@
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:layout_margin="16dp"
-        android:scaleType="fitCenter"
+        android:scaleType="centerCrop"
         app:layout_constraintBottom_toTopOf="@+id/timestampTextView"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
