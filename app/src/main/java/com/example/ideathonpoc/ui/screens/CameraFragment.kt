@@ -261,13 +261,14 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
         // This method will be called when all required safety items are detected
         binding.root.postDelayed({
             takeScreenshot()
-        }, 100)
+        }, 10)
     }
 
 
     private fun takeScreenshot() {
         val imageCapture = ImageCapture.Builder()
             .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
+            .setTargetRotation(binding.viewFinder.display.rotation)
             .build()
 
         // Unbind existing use cases and rebind with imageCapture
@@ -296,17 +297,8 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
                     val savedUri = output.savedUri ?: Uri.fromFile(photoFile)
                     Log.d(TAG, "Photo capture succeeded: $savedUri")
 
-                    // Load the captured image
-                    val capturedBitmap = BitmapFactory.decodeFile(photoFile.absolutePath)
-
-                    // Get the overlay bitmap
-                    val overlayBitmap = binding.overlay.drawToBitmap()
-
-                    // Combine the bitmaps
-                    val combinedBitmap = combineBitmaps(capturedBitmap, overlayBitmap)
-
-                    // Save the combined bitmap
-                    saveCombinedBitmap(combinedBitmap)
+                    // Navigate to ResultActivity with the captured image path
+                    navigateToResultActivity(photoFile.absolutePath, System.currentTimeMillis())
                 }
 
                 override fun onError(exc: ImageCaptureException) {
@@ -323,34 +315,6 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
         return if (mediaDir != null && mediaDir.exists()) mediaDir else requireContext().filesDir
     }
 
-    private fun combineBitmaps(background: Bitmap, overlay: Bitmap): Bitmap {
-        val combined = Bitmap.createBitmap(background.width, background.height, background.config)
-        val canvas = Canvas(combined)
-        canvas.drawBitmap(background, Matrix(), null)
-
-        // Scale the overlay to match the background size
-        val scaledOverlay = Bitmap.createScaledBitmap(overlay, background.width, background.height, true)
-        canvas.drawBitmap(scaledOverlay, Matrix(), null)
-
-        return combined
-    }
-
-    private fun saveCombinedBitmap(bitmap: Bitmap) {
-        val timestamp = System.currentTimeMillis()
-        val fileName = "safety_screenshot_$timestamp.jpg"
-        val file = File(requireContext().filesDir, fileName)
-
-        try {
-            FileOutputStream(file).use { out ->
-                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, out)
-            }
-            Log.d(TAG, "Combined screenshot saved: ${file.absolutePath}")
-            Log.d(TAG, "File size: ${file.length()} bytes")
-            navigateToResultActivity(file.absolutePath, timestamp)
-        } catch (e: IOException) {
-            Log.e(TAG, "Failed to save combined screenshot", e)
-        }
-    }
     private fun navigateToResultActivity(imagePath: String, timestamp: Long) {
         val intent = Intent(requireContext(), ResultActivity::class.java).apply {
             putExtra("imagePath", imagePath)

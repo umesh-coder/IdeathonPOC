@@ -101,10 +101,14 @@ class Detector(
 
         if (bestBoxes == null) {
             detectorListener.onEmptyDetect()
-            return
+        }else {
+            detectorListener.onDetect(bestBoxes, inferenceTime)
         }
 
-        detectorListener.onDetect(bestBoxes, inferenceTime)
+        // Clear detected items after each frame
+        detectedItems.clear()
+
+
     }
 
     //    private fun bestBox(array: FloatArray) : List<BoundingBox>? {
@@ -202,7 +206,7 @@ class Detector(
                     )
 
                     // Mark the item as detected
-                    if ( clsName in requiredSafetyItems && clsName !in detectedItems) {
+                    if ( clsName in requiredSafetyItems ) {
                         detectedItems.add(clsName)
                     }
                 }
@@ -212,7 +216,6 @@ class Detector(
         // Check if all required items have been detected
         if (detectedItems.size == requiredSafetyItems.size && detectedItems.containsAll(requiredSafetyItems)) {
             detectorListener.onAllRequiredItemsDetected()
-            // Reset detected items for the next detection cycle
             detectedItems.clear()
         }
 
