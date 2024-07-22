@@ -27,7 +27,7 @@ class Detector(
 
     private var interpreter: Interpreter? = null
     private var labels = mutableListOf<String>()
-    private val detectedItems = mutableSetOf<String>()
+    val detectedItems = mutableSetOf<String>()
     private var tensorWidth = 0
     private var tensorHeight = 0
     private var numChannel = 0
@@ -106,7 +106,7 @@ class Detector(
         }
 
         // Clear detected items after each frame
-        detectedItems.clear()
+//        detectedItems.clear()
 
 
     }
