@@ -4,22 +4,25 @@ import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
-import android.graphics.Canvas
 import android.graphics.Matrix
 import android.net.Uri
 import android.os.Bundle
-import android.provider.MediaStore
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.camera.core.*
+import androidx.camera.core.AspectRatio
+import androidx.camera.core.Camera
+import androidx.camera.core.CameraSelector
+import androidx.camera.core.ImageAnalysis
+import androidx.camera.core.ImageCapture
+import androidx.camera.core.ImageCaptureException
+import androidx.camera.core.ImageProxy
+import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.content.ContextCompat
-import androidx.core.view.drawToBitmap
 import androidx.fragment.app.Fragment
 import com.example.ideathonpoc.R
 import com.example.ideathonpoc.databinding.FragmentCameraBinding
@@ -27,9 +30,6 @@ import com.example.ideathonpoc.ui.modelfiles.BoundingBox
 import com.example.ideathonpoc.ui.modelfiles.Constants
 import com.example.ideathonpoc.ui.modelfiles.Detector
 import java.io.File
-import java.io.FileOutputStream
-import java.io.IOException
-import java.nio.file.Files.createFile
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
@@ -65,8 +65,7 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
         savedInstanceState: Bundle?
     ): View {
         _binding = FragmentCameraBinding.inflate(inflater, container, false)
-        requiredSafetyItems = listOf("Helmet", "Safety Vest","Gloves")
-
+        requiredSafetyItems = listOf("Helmet", "Safety Vest", "Gloves")
         return binding.root
     }
 
@@ -74,7 +73,13 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
         super.onViewCreated(view, savedInstanceState)
 
         try {
-            detector = Detector(requireContext(), Constants.MODEL_PATH, Constants.LABELS_PATH, this,requiredSafetyItems)
+            detector = Detector(
+                requireContext(),
+                Constants.MODEL_PATH,
+                Constants.LABELS_PATH,
+                this,
+                requiredSafetyItems
+            )
             detector.setup()
 
             if (allPermissionsGranted()) {
@@ -85,11 +90,13 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
 
             cameraExecutor = Executors.newSingleThreadExecutor()
 
-            requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, object : OnBackPressedCallback(true) {
-                override fun handleOnBackPressed() {
-                    navigateBack()
-                }
-            })
+            requireActivity().onBackPressedDispatcher.addCallback(
+                viewLifecycleOwner,
+                object : OnBackPressedCallback(true) {
+                    override fun handleOnBackPressed() {
+                        navigateBack()
+                    }
+                })
         } catch (e: Exception) {
             Log.e(TAG, "Error in onViewCreated", e)
             navigateBack()
@@ -262,6 +269,9 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
         binding.root.postDelayed({
             takeScreenshot()
         }, 10)
+
+        // Navigate to ResultActivity after a delay
+
     }
 
 

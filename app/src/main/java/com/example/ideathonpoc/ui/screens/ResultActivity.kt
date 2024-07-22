@@ -1,22 +1,14 @@
 package com.example.ideathonpoc.ui.screens
 
-import android.net.Uri
+import android.graphics.BitmapFactory
 import android.os.Bundle
-import androidx.activity.enableEdgeToEdge
+import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
 import com.example.ideathonpoc.R
 import com.example.ideathonpoc.databinding.ActivityResultBinding
-import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-import android.graphics.BitmapFactory
-import android.util.Log
-import android.widget.ImageView
-import com.bumptech.glide.Glide
-import com.bumptech.glide.load.engine.DiskCacheStrategy
 
 class ResultActivity : AppCompatActivity() {
 
