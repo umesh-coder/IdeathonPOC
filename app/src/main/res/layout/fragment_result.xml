@@ -8,25 +8,28 @@
 
     <ImageView
         android:id="@+id/screenshotImageView"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:layout_margin="16dp"
-        android:scaleType="fitCenter"
         app:layout_constraintBottom_toTopOf="@+id/timestampTextView"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        tools:src="@tools:sample/backgrounds/scenic" />
+        android:src="@drawable/ppekit" />
+
+
 
     <TextView
         android:id="@+id/timestampTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
         android:layout_marginBottom="16dp"
         android:textSize="16sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        tools:text="Screenshot taken at: 2023-07-22 14:30:00" />
+        app:layout_constraintTop_toBottomOf="@+id/screenshotImageView"
+        tools:text="2023-07-22 14:30:00" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
