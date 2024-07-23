@@ -1,12 +1,16 @@
 package com.example.ideathonpoc.ui.screens
 
 import android.Manifest
+import android.app.AlertDialog
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.Matrix
 import android.net.Uri
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import android.speech.tts.TextToSpeech
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -30,6 +34,7 @@ import com.example.ideathonpoc.ui.modelfiles.BoundingBox
 import com.example.ideathonpoc.ui.modelfiles.Constants
 import com.example.ideathonpoc.ui.modelfiles.Detector
 import java.io.File
+import java.util.Locale
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
@@ -48,6 +53,11 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
     private lateinit var detector: Detector
     private lateinit var cameraExecutor: ExecutorService
     private lateinit var requiredSafetyItems: List<String>
+    private lateinit var textToSpeech: TextToSpeech
+    private val handler = Handler(Looper.getMainLooper())
+    private lateinit var detectionRunnable: Runnable
+    private var isDetectionRunning = false
+
 
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
@@ -66,6 +76,11 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
     ): View {
         _binding = FragmentCameraBinding.inflate(inflater, container, false)
         requiredSafetyItems = listOf("Helmet", "Safety Vest", "Gloves")
+        textToSpeech = TextToSpeech(requireContext()) { status ->
+            if (status == TextToSpeech.SUCCESS) {
+                textToSpeech.language = Locale.UK
+            }
+        }
         return binding.root
     }
 
@@ -105,6 +120,7 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
         binding.switchCameraButton.setOnClickListener {
             switchCamera()
         }
+        startDetectionTimer()
     }
 
     override fun onPause() {
@@ -139,9 +155,13 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
 
     private fun cleanupResources() {
         try {
+            handler.removeCallbacks(detectionRunnable)
+            isDetectionRunning = false
             imageAnalyzer?.clearAnalyzer()
             cameraProvider?.unbindAll()
             detector.clear()
+            textToSpeech.stop()
+            textToSpeech.shutdown()
             cameraExecutor.shutdownNow()
         } catch (e: Exception) {
         }
@@ -257,14 +277,18 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
                 }
             }
         }
+
     }
 
     companion object {
         private const val TAG = "CameraFragment"
+        private const val DETECTION_TIMEOUT = 9000L
         private val REQUIRED_PERMISSIONS = arrayOf(Manifest.permission.CAMERA)
     }
 
     override fun onAllRequiredItemsDetected() {
+        handler.removeCallbacks(detectionRunnable)
+        isDetectionRunning = false
         // This method will be called when all required safety items are detected
         binding.root.postDelayed({
             takeScreenshot()
@@ -273,6 +297,42 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
         // Navigate to ResultActivity after a delay
 
     }
+    private fun startDetectionTimer() {
+        detectionRunnable = Runnable {
+            if (isDetectionRunning) {
+                showMissingItemsDialog()
+            }
+        }
+        handler.postDelayed(detectionRunnable, DETECTION_TIMEOUT)
+        isDetectionRunning = true
+    }
+
+    private fun resetDetectionTimer() {
+        handler.removeCallbacks(detectionRunnable)
+        startDetectionTimer()
+    }
+    private fun showMissingItemsDialog() {
+        val missingItems = requiredSafetyItems.filterNot { it in detector.detectedItems }
+        if(missingItems.isNotEmpty()) {
+            val permit = "GENERAL"
+            val message = "As per the $permit Work permit ${missingItems.joinToString(", ")}  missing in your PPE, please wear right PPE to proceed for job "
+            textToSpeech.speak(message, TextToSpeech.QUEUE_FLUSH, null, null)
+
+        AlertDialog.Builder(requireContext())
+            .setTitle("Missing Safety Items")
+            .setMessage(message)
+            .setPositiveButton("Retry") { _, _ ->
+                detector.detectedItems.clear()
+                startDetectionTimer()
+            }
+            .setNegativeButton("Go Back") { _, _ ->
+                navigateBack()
+            }
+            .setCancelable(false)
+            .show()
+        }
+    }
+
 
 
     private fun takeScreenshot() {
