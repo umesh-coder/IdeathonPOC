@@ -24,11 +24,6 @@ class MainActivity : AppCompatActivity() {
                     true
                 }
 
-                R.id.message -> {
-//                    loadFragment("ResultFragment")
-                    true
-                }
-
                 R.id.settings -> {
                     loadFragment("AboutFragment")
                     true
@@ -44,7 +39,6 @@ class MainActivity : AppCompatActivity() {
         val fragment = supportFragmentManager.findFragmentByTag(fragmentTag)
             ?: when (fragmentTag) {
                 "HomeFragment" -> HomeFragment()
-                "ResultFragment" -> ResultFragment()
                 "AboutFragment" -> AboutFragment()
                 else -> throw IllegalArgumentException("Unknown fragment tag: $fragmentTag")
             }
