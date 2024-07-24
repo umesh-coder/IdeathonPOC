@@ -64,7 +64,4 @@ dependencies {
     implementation("org.tensorflow:tensorflow-lite-support:0.4.4")
 
     implementation("com.airbnb.android:lottie:$lottieVersion")
-
-
-
 }

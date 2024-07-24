@@ -7,15 +7,18 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageButton
 import androidx.fragment.app.Fragment
+import com.airbnb.lottie.LottieAnimationView
 import com.example.ideathonpoc.R
 import com.example.ideathonpoc.databinding.FragmentHomeBinding
+import com.google.android.material.bottomnavigation.BottomNavigationView
 
 class HomeFragment : Fragment() {
 
     private var _binding: FragmentHomeBinding? = null
     private val binding get() = _binding!!
 
-    private lateinit var liveCaptureButton: ImageButton
+    private lateinit var liveCaptureButton: LottieAnimationView
+    private lateinit var bottomNavigationView: BottomNavigationView
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -29,7 +32,7 @@ class HomeFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         try {
             liveCaptureButton = binding.liveCapture
-
+            bottomNavigationView = requireActivity().findViewById(R.id.bottomNav)
             setupButtons()
         } catch (e: Exception) {
             Log.e(TAG, "Error in onViewCreated", e)
@@ -40,20 +43,24 @@ class HomeFragment : Fragment() {
         liveCaptureButton.setOnClickListener {
             navigateToCameraFragment()
         }
-
-
     }
 
     private fun navigateToCameraFragment() {
         try {
+            bottomNavigationView.visibility = View.GONE
             val cameraFragment = CameraFragment()
             parentFragmentManager.beginTransaction()
                 .replace(R.id.container, cameraFragment)
-                .addToBackStack(null)  // Add to back stack for proper back navigation
+                .addToBackStack(null)
                 .commit()
         } catch (e: Exception) {
             Log.e(TAG, "Error navigating to CameraFragment", e)
         }
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
     }
 
     companion object {
