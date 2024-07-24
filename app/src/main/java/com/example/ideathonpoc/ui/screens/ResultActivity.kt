@@ -2,8 +2,11 @@ package com.example.ideathonpoc.ui.screens
 
 import android.graphics.BitmapFactory
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.speech.tts.TextToSpeech
 import android.util.Log
+import android.view.View
 import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
 import com.example.ideathonpoc.R
@@ -17,12 +20,18 @@ class ResultActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityResultBinding
     private lateinit var textToSpeech: TextToSpeech
+    private val handler = Handler(Looper.getMainLooper())
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityResultBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        handler.postDelayed(Runnable{
+            binding.resultOutputContainer.visibility = View.VISIBLE
+            binding.successAnimationView.visibility = View.GONE
+        },3000)
+
         textToSpeech = TextToSpeech(this) { status ->
             if (status == TextToSpeech.SUCCESS) {
                 val result = textToSpeech.setLanguage(Locale.UK)
@@ -52,7 +61,7 @@ class ResultActivity : AppCompatActivity() {
         timestamp.let { time ->
             val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
             val formattedTime = sdf.format(Date(time))
-            binding.timestampTextView.text = "Screenshot taken at: $formattedTime"
+            binding.timestampTextView.text = "Date and Time : $formattedTime"
         }
         Log.e(TAG, "onCreate: testing", )
 

@@ -32,14 +32,14 @@ class ResultFragment : Fragment() {
         imagePath?.let { path ->
             val imageFile = File(path)
             if (imageFile.exists()) {
-                binding.screenshotImageView.setImageURI(android.net.Uri.fromFile(imageFile))
+//                binding.screenshotImageView.setImageURI(android.net.Uri.fromFile(imageFile))
             }
         }
 
         timestamp?.let { time ->
             val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
             val formattedTime = sdf.format(Date(time))
-            binding.timestampTextView.text = "Screenshot taken at: $formattedTime"
+//            binding.timestampTextView.text = "Screenshot taken at: $formattedTime"
         }
     }
 
