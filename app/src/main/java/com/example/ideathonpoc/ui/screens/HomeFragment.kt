@@ -9,8 +9,10 @@ import android.widget.ArrayAdapter
 import android.widget.AutoCompleteTextView
 import android.widget.ImageButton
 import androidx.fragment.app.Fragment
+import com.airbnb.lottie.LottieAnimationView
 import com.example.ideathonpoc.R
 import com.example.ideathonpoc.databinding.FragmentHomeBinding
+import com.google.android.material.bottomnavigation.BottomNavigationView
 
 class HomeFragment : Fragment() {
 
@@ -22,8 +24,9 @@ class HomeFragment : Fragment() {
         "High-Risk Permit" to listOf("Helmet", "Safety Vest", "Gloves")
     )
     private var selectedPermit: String? = null
-    private lateinit var liveCaptureButton: ImageButton
+    private lateinit var liveCaptureButton: LottieAnimationView
     private lateinit var permitDropdown: AutoCompleteTextView
+    private lateinit var bottomNavigationView: BottomNavigationView
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -38,7 +41,8 @@ class HomeFragment : Fragment() {
         try {
             liveCaptureButton = binding.liveCapture
             permitDropdown = binding.permitDropdown
-
+            bottomNavigationView = requireActivity().findViewById(R.id.bottomNav)
+            bottomNavigationView.visibility = View.VISIBLE
             setupPermitDropdown()
             setupButtons()
         } catch (e: Exception) {
@@ -70,8 +74,10 @@ class HomeFragment : Fragment() {
 
     private fun navigateToCameraFragment() {
         try {
+
             val requiredItems = permitMap[selectedPermit]
             if (requiredItems != null) {
+                bottomNavigationView.visibility = View.GONE
                 val cameraFragment = CameraFragment().apply {
                     arguments = Bundle().apply {
                         putString("PERMIT", selectedPermit)
