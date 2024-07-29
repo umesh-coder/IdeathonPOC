@@ -51,8 +51,9 @@
         android:id="@+id/permitDropdownLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Select Permit"
+        android:layout_margin="20dp"
 
+        android:hint="Select Permit"
         app:layout_constraintBottom_toTopOf="@+id/image_view_card"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
@@ -62,7 +63,9 @@
         <AutoCompleteTextView
             android:id="@+id/permitDropdown"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
+            android:layout_height="30dp"
+            android:gravity="center" />
+
     </com.google.android.material.textfield.TextInputLayout>
 
     <com.airbnb.lottie.LottieAnimationView
