@@ -33,6 +33,7 @@ import com.example.ideathonpoc.databinding.FragmentCameraBinding
 import com.example.ideathonpoc.ui.modelfiles.BoundingBox
 import com.example.ideathonpoc.ui.modelfiles.Constants
 import com.example.ideathonpoc.ui.modelfiles.Detector
+import com.google.android.material.bottomnavigation.BottomNavigationView
 import java.io.File
 import java.util.Locale
 import java.util.concurrent.ExecutorService
@@ -140,6 +141,8 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
     override fun onDestroyView() {
         super.onDestroyView()
         cleanupResources()
+        val bottomNavigationView = requireActivity().findViewById<BottomNavigationView>(R.id.bottomNav)
+        bottomNavigationView.visibility = View.VISIBLE
         _binding = null
     }
 
@@ -196,12 +199,12 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
             val rotation = binding.viewFinder.display.rotation
 
             preview = Preview.Builder()
-                .setTargetAspectRatio(AspectRatio.RATIO_4_3)
+                .setTargetAspectRatio(AspectRatio.RATIO_DEFAULT)
                 .setTargetRotation(rotation)
                 .build()
 
             imageAnalyzer = ImageAnalysis.Builder()
-                .setTargetAspectRatio(AspectRatio.RATIO_4_3)
+                .setTargetAspectRatio(AspectRatio.RATIO_DEFAULT)
                 .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                 .setTargetRotation(binding.viewFinder.display.rotation)
                 .setOutputImageFormat(ImageAnalysis.OUTPUT_IMAGE_FORMAT_RGBA_8888)
@@ -271,6 +274,7 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
             _binding?.overlay?.invalidate()
         }
     }
+
 
     override fun onDetect(boundingBoxes: List<BoundingBox>, inferenceTime: Long) {
         _binding?.let { binding ->
@@ -395,4 +399,6 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
         }
         startActivity(intent)
     }
+
+
 }
