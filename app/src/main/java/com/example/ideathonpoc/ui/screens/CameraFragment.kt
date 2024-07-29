@@ -136,8 +136,6 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
     override fun onDestroyView() {
         super.onDestroyView()
         cleanupResources()
-        val bottomNavigationView = requireActivity().findViewById<BottomNavigationView>(R.id.bottomNav)
-        bottomNavigationView.visibility = View.VISIBLE
         _binding = null
     }
 
@@ -269,7 +267,6 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
             _binding?.overlay?.invalidate()
         }
     }
-
 
     override fun onDetect(boundingBoxes: List<BoundingBox>, inferenceTime: Long) {
         _binding?.let { binding ->

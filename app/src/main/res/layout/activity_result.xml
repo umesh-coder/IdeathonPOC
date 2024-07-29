@@ -1,30 +1,48 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:layout_margin="10dp"
+    android:background="@drawable/result_background"
     android:gravity="center">
 
 
-    <LinearLayout xmlns:tools="http://schemas.android.com/tools"
+    <LinearLayout
         android:id="@+id/result_output_container"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_margin="20dp"
-        android:background="@drawable/sucess_ppe_kit"
         android:orientation="vertical"
         android:paddingTop="20dp"
         android:paddingBottom="20dp"
         android:visibility="gone"
+        android:background="@drawable/sucess_img_bg"
         tools:context=".ui.screens.ResultActivity">
 
 
+        <TextView
+            android:id="@+id/textView2"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/poppins"
+            android:gravity="center"
+            android:shadowColor="#4CAF50"
+            android:shadowDx="5"
+            android:shadowDy="5"
+            android:shadowRadius="5"
+            android:text="Now You Are Safe ✅"
+            android:textColor="#B4E57B"
+            android:textSize="25sp"
+            android:textStyle="bold" />
+
         <com.google.android.material.imageview.ShapeableImageView
+            android:layout_marginTop="5dp"
             android:id="@+id/screenshotImageView"
             android:layout_width="match_parent"
             android:layout_height="300dp"
-            android:padding="6dp"
-
+            android:padding="20dp"
             android:scaleType="fitXY"
             android:src="@drawable/ppekit"
             app:shapeAppearanceOverlay="@style/RoundedSquare" />
@@ -34,7 +52,7 @@
             android:id="@+id/timestampTextView"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="40dp"
+            android:layout_marginTop="10dp"
             android:fontFamily="@font/poppins"
             android:gravity="center"
             android:text="Date And Time : 2023-07-22 14:30:00"

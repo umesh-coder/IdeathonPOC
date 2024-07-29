@@ -33,6 +33,7 @@ class HomeFragment : Fragment() {
         try {
             liveCaptureButton = binding.liveCapture
             bottomNavigationView = requireActivity().findViewById(R.id.bottomNav)
+            bottomNavigationView.visibility = View.VISIBLE
             setupButtons()
         } catch (e: Exception) {
             Log.e(TAG, "Error in onViewCreated", e)

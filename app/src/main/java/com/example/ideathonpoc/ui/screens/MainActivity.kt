@@ -1,6 +1,7 @@
 package com.example.ideathonpoc.ui.screens
 
 import android.os.Bundle
+import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.example.ideathonpoc.R
@@ -14,7 +15,6 @@ class MainActivity : AppCompatActivity() {
 
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-
         loadFragment("HomeFragment")
         bottomNav = findViewById<BottomNavigationView>(R.id.bottomNav)!!
         bottomNav.setOnItemSelectedListener {
@@ -23,12 +23,10 @@ class MainActivity : AppCompatActivity() {
                     loadFragment("HomeFragment")
                     true
                 }
-
                 R.id.settings -> {
                     loadFragment("AboutFragment")
                     true
                 }
-
                 else -> false
             }
         }
