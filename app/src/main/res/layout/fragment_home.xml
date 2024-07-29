@@ -48,6 +48,24 @@
 
     </androidx.cardview.widget.CardView>
 
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/permitDropdownLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Select Permit"
+
+        app:layout_constraintBottom_toTopOf="@+id/image_view_card"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textView">
+
+        <AutoCompleteTextView
+            android:id="@+id/permitDropdown"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+    </com.google.android.material.textfield.TextInputLayout>
+
     <ImageButton
         android:id="@+id/live_capture"
         android:layout_width="100dp"
