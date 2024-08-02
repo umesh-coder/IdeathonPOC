@@ -61,14 +61,14 @@ class ResultActivity : AppCompatActivity() {
         timestamp.let { time ->
             val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
             val formattedTime = sdf.format(Date(time))
-            binding.timestampTextView.text = "Date and Time : $formattedTime"
+            binding.timestampTextView.text = formattedTime
         }
         Log.e(TAG, "onCreate: testing")
 
     }
 
     private fun speakOut() {
-        val message = "You wore right PPE, you can proceed with your Job, Stay Vigilant, Stay Safe"
+        val message = "You Can Proceed with Your Job, Stay Vigilant, Stay Safe"
         textToSpeech.speak(message, TextToSpeech.QUEUE_FLUSH, null, null)
 
     }
@@ -78,11 +78,6 @@ class ResultActivity : AppCompatActivity() {
         textToSpeech.stop()
         textToSpeech.shutdown()
 
-    }
-
-    override fun onBackPressed() {
-        Toast.makeText(this, "Back pressed", Toast.LENGTH_SHORT).show()
-        super.onBackPressed()
     }
 
     companion object {
