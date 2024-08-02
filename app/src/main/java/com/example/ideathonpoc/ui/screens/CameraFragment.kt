@@ -2,11 +2,13 @@ package com.example.ideathonpoc.ui.screens
 
 import android.Manifest
 import android.app.AlertDialog
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Matrix
+import android.media.MediaPlayer
 import android.net.Uri
 import android.os.Bundle
 import android.os.CountDownTimer
@@ -63,6 +65,7 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
     private lateinit var detectionRunnable: Runnable
     private var isDetectionRunning = false
     private var selectedPermit: String? = null
+    private  var mediaPlayer: MediaPlayer = MediaPlayer()
 
 
     private val requestPermissionLauncher = registerForActivityResult(
@@ -310,11 +313,24 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
     private fun startDetectionTimer() {
         detectionRunnable = Runnable {
             if (isDetectionRunning) {
+                val resID = resources.getIdentifier("failure_sound", "raw", activity?.packageName)
+                playMedia(context,resID)
                 showMissingItemsDialog()
             }
         }
         handler.postDelayed(detectionRunnable, DETECTION_TIMEOUT)
         isDetectionRunning = true
+    }
+
+    private fun playMedia(context: Context?, resID: Int) {
+        try {
+            mediaPlayer = MediaPlayer.create(context, resID)
+            mediaPlayer.start()
+            handler.postDelayed({  mediaPlayer.stop()},2000)
+
+        } catch (exception: Exception) {
+            exception.printStackTrace()
+        }
     }
 
     private fun resetDetectionTimer() {
@@ -355,7 +371,7 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
             object : CountDownTimer(5000, 1000) {
                 override fun onTick(millisUntilFinished: Long) {
                     val secondsLeft = millisUntilFinished / 1000
-                    positiveButton.text = "Retry ($secondsLeft)"
+                    positiveButton.text = "Rescan ($secondsLeft)"
                 }
 
                 override fun onFinish() {
