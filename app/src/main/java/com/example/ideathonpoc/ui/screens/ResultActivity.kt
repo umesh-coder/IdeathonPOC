@@ -1,5 +1,6 @@
 package com.example.ideathonpoc.ui.screens
 
+import android.content.Intent
 import android.graphics.BitmapFactory
 import android.os.Bundle
 import android.os.Handler
@@ -8,13 +9,13 @@ import android.speech.tts.TextToSpeech
 import android.util.Log
 import android.view.View
 import android.widget.ImageView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.ideathonpoc.R
 import com.example.ideathonpoc.databinding.ActivityResultBinding
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-import java.util.Queue
 
 class ResultActivity : AppCompatActivity() {
 
@@ -27,10 +28,10 @@ class ResultActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityResultBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        handler.postDelayed(Runnable{
+        handler.postDelayed(Runnable {
             binding.resultOutputContainer.visibility = View.VISIBLE
             binding.successAnimationView.visibility = View.GONE
-        },3000)
+        }, 3000)
 
         textToSpeech = TextToSpeech(this) { status ->
             if (status == TextToSpeech.SUCCESS) {
@@ -45,7 +46,6 @@ class ResultActivity : AppCompatActivity() {
             }
         }
 
-        
 
         val imagePath = intent.getStringExtra("imagePath")
         val timestamp = intent.getLongExtra("timestamp", 0L)
@@ -54,7 +54,7 @@ class ResultActivity : AppCompatActivity() {
             val bitmap = BitmapFactory.decodeFile(path)
             val imageView = findViewById<ImageView>(R.id.screenshotImageView)
             imageView.setImageBitmap(bitmap)
-//            imageView.rotation = 90f // Rotate the image by 90 degrees
+            imageView.rotation = 90f // Rotate the image by 90 degrees
 
         }
 
@@ -63,13 +63,13 @@ class ResultActivity : AppCompatActivity() {
             val formattedTime = sdf.format(Date(time))
             binding.timestampTextView.text = "Date and Time : $formattedTime"
         }
-        Log.e(TAG, "onCreate: testing", )
+        Log.e(TAG, "onCreate: testing")
 
     }
 
     private fun speakOut() {
         val message = "You wore right PPE, you can proceed with your Job, Stay Vigilant, Stay Safe"
-        textToSpeech.speak(message,TextToSpeech.QUEUE_FLUSH,null,null)
+        textToSpeech.speak(message, TextToSpeech.QUEUE_FLUSH, null, null)
 
     }
 
@@ -77,7 +77,14 @@ class ResultActivity : AppCompatActivity() {
         super.onDestroy()
         textToSpeech.stop()
         textToSpeech.shutdown()
+
     }
+
+    override fun onBackPressed() {
+        Toast.makeText(this, "Back pressed", Toast.LENGTH_SHORT).show()
+        super.onBackPressed()
+    }
+
     companion object {
         private const val TAG = "ResultActivity"
     }

@@ -341,7 +341,7 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
 
     private fun takeScreenshot() {
         val imageCapture = ImageCapture.Builder()
-            .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
+            .setCaptureMode(ImageCapture.CAPTURE_MODE_MAXIMIZE_QUALITY)
             .setTargetRotation(binding.viewFinder.display.rotation)
             .build()
 
