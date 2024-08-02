@@ -18,41 +18,45 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <com.google.android.material.textfield.TextInputLayout
-        android:id="@+id/permitDropdownLayout"
-        android:layout_width="match_parent"
+    <TextView
+        android:id="@+id/permitLabel"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_margin="20dp"
-        android:hint="Select Permit"
+        android:layout_marginTop="20dp"
+        android:text="Select Permit"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textView"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent">
+        android:layout_marginStart="20dp"/>
 
-        <AutoCompleteTextView
-            android:id="@+id/permitDropdown"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center" />
-
-    </com.google.android.material.textfield.TextInputLayout>
-
-    <com.google.android.material.textfield.TextInputLayout
-        android:id="@+id/scanningdropdownlayout"
+    <Spinner
+        android:id="@+id/permitDropdown"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_margin="20dp"
-        android:hint="Select Scan Type"
-        app:layout_constraintTop_toBottomOf="@+id/permitDropdownLayout"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent">
+        android:layout_marginHorizontal="20dp"
+        android:layout_marginTop="8dp"
+        app:layout_constraintTop_toBottomOf="@+id/permitLabel"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
 
-        <AutoCompleteTextView
-            android:id="@+id/scanningdropdown"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center" />
+    <TextView
+        android:id="@+id/scanTypeLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:text="Select Scan Type"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/permitDropdown"
+        android:layout_marginStart="20dp"/>
 
-    </com.google.android.material.textfield.TextInputLayout>
+    <Spinner
+        android:id="@+id/scanningdropdown"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="20dp"
+        android:layout_marginTop="8dp"
+        app:layout_constraintTop_toBottomOf="@+id/scanTypeLabel"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
 
     <androidx.cardview.widget.CardView
         android:id="@+id/image_view_card"
@@ -61,14 +65,14 @@
         android:layout_margin="15dp"
         app:cardCornerRadius="20dp"
         app:cardElevation="4dp"
-        app:layout_constraintTop_toBottomOf="@+id/scanningdropdownlayout"
+        app:layout_constraintTop_toBottomOf="@+id/scanningdropdown"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent">
 
         <com.airbnb.lottie.LottieAnimationView
             android:id="@+id/animationView"
             android:layout_width="match_parent"
-            android:layout_height="500dp"
+            android:layout_height="300dp"
             android:background="@drawable/scan_placeholder_border"
             app:lottie_autoPlay="true"
             app:lottie_loop="true"
@@ -86,7 +90,6 @@
         android:scaleType="centerCrop"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.498"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/image_view_card"
         app:layout_constraintVertical_bias="0.251"
