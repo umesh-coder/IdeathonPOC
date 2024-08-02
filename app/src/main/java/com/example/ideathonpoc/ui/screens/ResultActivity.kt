@@ -54,7 +54,7 @@ class ResultActivity : AppCompatActivity() {
             val bitmap = BitmapFactory.decodeFile(path)
             val imageView = findViewById<ImageView>(R.id.screenshotImageView)
             imageView.setImageBitmap(bitmap)
-            imageView.rotation = 90f // Rotate the image by 90 degrees
+
         }
 
         timestamp.let { time ->
