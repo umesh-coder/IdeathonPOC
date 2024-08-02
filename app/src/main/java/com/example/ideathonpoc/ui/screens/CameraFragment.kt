@@ -9,6 +9,7 @@ import android.graphics.BitmapFactory
 import android.graphics.Matrix
 import android.net.Uri
 import android.os.Bundle
+import android.os.CountDownTimer
 import android.os.Handler
 import android.os.Looper
 import android.speech.tts.TextToSpeech
@@ -62,7 +63,6 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
     private lateinit var detectionRunnable: Runnable
     private var isDetectionRunning = false
     private var selectedPermit: String? = null
-
 
 
     private val requestPermissionLauncher = registerForActivityResult(
@@ -328,18 +328,32 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
             val message = "As per the $selectedPermit Work permit ${missingItems.joinToString(", ")}  missing in your PPE, please wear right PPE to proceed for job "
             textToSpeech.speak(message, TextToSpeech.QUEUE_FLUSH, null, null)
 
-        AlertDialog.Builder(requireContext())
-            .setTitle("Missing Safety Items")
-            .setMessage(message)
-            .setPositiveButton("Retry") { _, _ ->
+            val dialog = AlertDialog.Builder(requireContext())
+                .setTitle("Missing Safety Items")
+                .setMessage(message)
+                .setCancelable(false)
+                .create()
+
+            dialog.setButton(AlertDialog.BUTTON_POSITIVE, "Retry (5)") { _, _ ->
                 detector.detectedItems.clear()
                 startDetectionTimer()
             }
-            .setCancelable(false)
-            .show()
+            dialog.show()
+            val positiveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
+
+            object : CountDownTimer(5000, 1000) {
+                override fun onTick(millisUntilFinished: Long) {
+                    val secondsLeft = millisUntilFinished / 1000
+                    positiveButton.text = "Retry ($secondsLeft)"
+                }
+
+                override fun onFinish() {
+                    dialog.getButton(AlertDialog.BUTTON_POSITIVE).performClick()
+                }
+
+            }.start()
         }
     }
-
 
 //    private fun takeScreenshot() {
 //        val imageCapture = ImageCapture.Builder()
@@ -388,7 +402,7 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
         val imageCapture = ImageCapture.Builder()
             .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
             .setTargetRotation(binding.viewFinder.display.rotation)
-            .setTargetResolution(Size(720, 1280)) // Set target resolution for portrait mode
+            .setTargetResolution(Size(640, 480)) // Set target resolution for portrait mode
             .build()
 
         // Unbind existing use cases and rebind with imageCapture

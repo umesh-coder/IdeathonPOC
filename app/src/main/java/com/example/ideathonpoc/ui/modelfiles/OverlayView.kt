@@ -100,7 +100,7 @@ class OverlayView(context: Context?, attrs: AttributeSet?) : View(context, attrs
         val lineHeight = 60f
 
         requiredItems.forEachIndexed { index, item ->
-            val statusText = if (detectedItems.contains(item)) "✓ $item" else "✗ $item"
+            val statusText = if (detectedItems.contains(item)) "✔ $item" else "❌ $item"
             val x = startX
             val y = startY + (index + 1) * lineHeight
 
