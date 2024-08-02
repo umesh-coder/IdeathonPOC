@@ -7,7 +7,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.AutoCompleteTextView
-import android.widget.ImageButton
 import androidx.fragment.app.Fragment
 import com.airbnb.lottie.LottieAnimationView
 import com.example.ideathonpoc.R
@@ -24,8 +23,10 @@ class HomeFragment : Fragment() {
         "High-Risk Permit" to listOf("Helmet", "Safety Vest", "Gloves")
     )
     private var selectedPermit: String? = null
+    private var selectedScanType: String? = null
     private lateinit var liveCaptureButton: LottieAnimationView
     private lateinit var permitDropdown: AutoCompleteTextView
+    private lateinit var scanTypeDropdown: AutoCompleteTextView
     private lateinit var bottomNavigationView: BottomNavigationView
 
     override fun onCreateView(
@@ -41,9 +42,11 @@ class HomeFragment : Fragment() {
         try {
             liveCaptureButton = binding.liveCapture
             permitDropdown = binding.permitDropdown
+            scanTypeDropdown = binding.scanningdropdown
             bottomNavigationView = requireActivity().findViewById(R.id.bottomNav)
             bottomNavigationView.visibility = View.VISIBLE
             setupPermitDropdown()
+            setupScanTypeDropdown()
             setupButtons()
         } catch (e: Exception) {
             Log.e(TAG, "Error in onViewCreated", e)
@@ -64,33 +67,45 @@ class HomeFragment : Fragment() {
         }
     }
 
+    private fun setupScanTypeDropdown() {
+        val scanTypes = listOf("Scan one after other", "Scan everything")
+        val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_list_item_1, scanTypes)
+        scanTypeDropdown.setAdapter(adapter)
+        scanTypeDropdown.setOnFocusChangeListener { view, hasFocus ->
+            if (hasFocus) {
+                (view as AutoCompleteTextView).showDropDown()
+            }
+        }
+        scanTypeDropdown.setOnItemClickListener { _, _, position, _ ->
+            selectedScanType = scanTypes[position]
+        }
+    }
+
     private fun setupButtons() {
         liveCaptureButton.setOnClickListener {
             navigateToCameraFragment()
         }
-
-
     }
 
     private fun navigateToCameraFragment() {
         try {
-
             val requiredItems = permitMap[selectedPermit]
-            if (requiredItems != null) {
+            if (requiredItems != null && selectedScanType != null) {
                 bottomNavigationView.visibility = View.GONE
                 val cameraFragment = CameraFragment().apply {
                     arguments = Bundle().apply {
                         putString("PERMIT", selectedPermit)
                         putStringArrayList("REQUIRED_ITEMS", ArrayList(requiredItems))
+                        putString("SCAN_TYPE", selectedScanType)
                     }
                 }
 
                 parentFragmentManager.beginTransaction()
                     .replace(R.id.container, cameraFragment)
-                    .addToBackStack(null)  // Add to back stack for proper back navigation
+                    .addToBackStack(null)
                     .commit()
             } else {
-                Log.e(TAG, "No permit selected or invalid permit")
+                Log.e(TAG, "No permit or scan type selected, or invalid permit")
             }
         } catch (e: Exception) {
             Log.e(TAG, "Error navigating to CameraFragment", e)
