@@ -364,6 +364,7 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
 
             positiveButton.setOnClickListener {
                 dialog.dismiss()
+                detector.detectedItems
                 startDetectionTimer()
             }
 
