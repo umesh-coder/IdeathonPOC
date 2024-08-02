@@ -8,6 +8,7 @@ import android.graphics.Bitmap
 import android.graphics.Matrix
 import android.net.Uri
 import android.os.Bundle
+import android.os.CountDownTimer
 import android.os.Handler
 import android.os.Looper
 import android.speech.tts.TextToSpeech
@@ -59,7 +60,6 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
     private lateinit var detectionRunnable: Runnable
     private var isDetectionRunning = false
     private var selectedPermit: String? = null
-
 
 
     private val requestPermissionLauncher = registerForActivityResult(
@@ -304,6 +304,7 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
         // Navigate to ResultActivity after a delay
 
     }
+
     private fun startDetectionTimer() {
         detectionRunnable = Runnable {
             if (isDetectionRunning) {
@@ -318,26 +319,40 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
         handler.removeCallbacks(detectionRunnable)
         startDetectionTimer()
     }
+
     private fun showMissingItemsDialog() {
         val missingItems = requiredSafetyItems.filterNot { it in detector.detectedItems }
-        if(missingItems.isNotEmpty()) {
+        if (missingItems.isNotEmpty()) {
 
-            val message = "As per the $selectedPermit Work permit ${missingItems.joinToString(", ")}  missing in your PPE, please wear right PPE to proceed for job "
+            val message =
+                "As per the $selectedPermit Work permit ${missingItems.joinToString(", ")}  missing in your PPE, please wear right PPE to proceed for job "
             textToSpeech.speak(message, TextToSpeech.QUEUE_FLUSH, null, null)
 
-        AlertDialog.Builder(requireContext())
-            .setTitle("Missing Safety Items")
-            .setMessage(message)
-            .setPositiveButton("Retry") { _, _ ->
+            val dialog = AlertDialog.Builder(requireContext())
+                .setTitle("Missing Safety Items")
+                .setMessage(message)
+                .setCancelable(false)
+                .create()
+
+            dialog.setButton(AlertDialog.BUTTON_POSITIVE, "Retry (5)") { _, _ ->
                 detector.detectedItems.clear()
                 startDetectionTimer()
             }
-            .setCancelable(false)
-            .show()
+            dialog.show()
+            val positiveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
+
+            object : CountDownTimer(5000, 1000) {
+                override fun onTick(millisUntilFinished: Long) {
+                    val secondsLeft = millisUntilFinished / 1000
+                    positiveButton.text = "Retry ($secondsLeft)"
+                }
+
+                override fun onFinish() {
+                    dialog.getButton(AlertDialog.BUTTON_POSITIVE).performClick()
+                }
+            }.start()
         }
     }
-
-
 
     private fun takeScreenshot() {
         val imageCapture = ImageCapture.Builder()
