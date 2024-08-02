@@ -23,6 +23,7 @@ class ResultActivity : AppCompatActivity() {
     private lateinit var textToSpeech: TextToSpeech
     private val handler = Handler(Looper.getMainLooper())
 
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityResultBinding.inflate(layoutInflater)
@@ -62,11 +63,13 @@ class ResultActivity : AppCompatActivity() {
             binding.timestampTextView.text = "Date and Time : $formattedTime"
         }
         Log.e(TAG, "onCreate: testing")
+
     }
 
     private fun speakOut() {
         val message = "You wore right PPE, you can proceed with your Job, Stay Vigilant, Stay Safe"
         textToSpeech.speak(message, TextToSpeech.QUEUE_FLUSH, null, null)
+
     }
 
     override fun onDestroy() {
