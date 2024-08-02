@@ -489,11 +489,13 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
     }
 
     private fun navigateToResultActivity(imagePath: String, timestamp: Long) {
-        val intent = Intent(requireContext(), ResultActivity::class.java).apply {
-            putExtra("imagePath", imagePath)
-            putExtra("timestamp", timestamp)
-        }
-        startActivity(intent)
+        Handler(Looper.getMainLooper()).postDelayed({
+            val intent = Intent(requireContext(), ResultActivity::class.java).apply {
+                putExtra("imagePath", imagePath)
+                putExtra("timestamp", timestamp)
+            }
+            startActivity(intent)
+        }, 3000) // 3000 milliseconds delay (5 seconds)
     }
 
 

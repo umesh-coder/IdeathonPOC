@@ -99,8 +99,7 @@ class OverlayView(context: Context?, attrs: AttributeSet?) : View(context, attrs
             )
 
             // Draw SVG icon
-            val iconRes =
-                if (isDetected) R.drawable.success_icon else R.drawable.failure_icon  // Replace with your actual drawable names
+            val iconRes = if (isDetected) R.drawable.success_icon else R.drawable.failure_icon  // Replace with your actual drawable names
             val iconDrawable = VectorDrawableCompat.create(resources, iconRes, null)
             iconDrawable?.setBounds(
                 rectLeft.toInt() + padding.toInt(),
