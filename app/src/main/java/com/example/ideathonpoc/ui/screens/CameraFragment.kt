@@ -13,6 +13,7 @@ import android.os.CountDownTimer
 import android.os.Handler
 import android.os.Looper
 import android.speech.tts.TextToSpeech
+import android.text.Html
 import android.util.Log
 import android.util.Size
 import android.view.LayoutInflater
@@ -36,7 +37,6 @@ import com.example.ideathonpoc.databinding.FragmentCameraBinding
 import com.example.ideathonpoc.ui.modelfiles.BoundingBox
 import com.example.ideathonpoc.ui.modelfiles.Constants
 import com.example.ideathonpoc.ui.modelfiles.Detector
-import com.google.android.material.bottomnavigation.BottomNavigationView
 import java.io.File
 import java.io.FileOutputStream
 import java.util.Locale
@@ -292,7 +292,7 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
 
     companion object {
         private const val TAG = "CameraFragment"
-        private const val DETECTION_TIMEOUT = 9000L
+        private const val DETECTION_TIMEOUT = 10000L
         private val REQUIRED_PERMISSIONS = arrayOf(Manifest.permission.CAMERA)
     }
 
@@ -325,7 +325,18 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
         val missingItems = requiredSafetyItems.filterNot { it in detector.detectedItems }
         if(missingItems.isNotEmpty()) {
 
-            val message = "As per the $selectedPermit Work permit ${missingItems.joinToString(", ")}  missing in your PPE, please wear right PPE to proceed for job "
+            val message = Html.fromHtml("${missingItems.joinToString(", ")}  missing in your <b>P P E</b>, please wear right <b>P P E</b> to proceed for job.")
+
+            Log.e(TAG, "Languages: "+textToSpeech.getAvailableLanguages());
+            val locale = Locale("hi_IN")
+
+            textToSpeech.setLanguage(locale)
+            textToSpeech.setSpeechRate(0.8f)
+            if (textToSpeech.isLanguageAvailable(locale) == TextToSpeech.LANG_AVAILABLE) {
+                textToSpeech.setLanguage(locale)
+            } else {
+                textToSpeech.setLanguage(Locale.ENGLISH)
+            }
             textToSpeech.speak(message, TextToSpeech.QUEUE_FLUSH, null, null)
 
             val dialog = AlertDialog.Builder(requireContext())
