@@ -350,6 +350,7 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
                 override fun onFinish() {
                     dialog.getButton(AlertDialog.BUTTON_POSITIVE).performClick()
                 }
+
             }.start()
         }
     }
@@ -401,7 +402,7 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
         val imageCapture = ImageCapture.Builder()
             .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
             .setTargetRotation(binding.viewFinder.display.rotation)
-            .setTargetResolution(Size(720, 1280)) // Set target resolution for portrait mode
+            .setTargetResolution(Size(640, 480)) // Set target resolution for portrait mode
             .build()
 
         // Unbind existing use cases and rebind with imageCapture
