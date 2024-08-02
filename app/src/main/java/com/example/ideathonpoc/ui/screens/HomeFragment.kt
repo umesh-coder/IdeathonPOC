@@ -59,12 +59,13 @@ class HomeFragment : Fragment() {
         val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, permits)
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         permitSpinner.adapter = adapter
-        permitSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+        selectedPermit = permits[0]
+      /*  permitSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>, view: View, position: Int, id: Long) {
                 selectedPermit = permits[position]
             }
             override fun onNothingSelected(parent: AdapterView<*>) {}
-        }
+        }*/
     }
 
     private fun setupScanTypeSpinner() {
@@ -72,12 +73,13 @@ class HomeFragment : Fragment() {
         val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, scanTypes)
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         scanTypeSpinner.adapter = adapter
-        scanTypeSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+        selectedScanType = scanTypes[0]
+       /* scanTypeSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>, view: View, position: Int, id: Long) {
                 selectedScanType = scanTypes[position]
             }
             override fun onNothingSelected(parent: AdapterView<*>) {}
-        }
+        }*/
     }
 
     private fun setupButtons() {
