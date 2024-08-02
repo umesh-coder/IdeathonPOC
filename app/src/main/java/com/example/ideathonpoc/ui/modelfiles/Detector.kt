@@ -105,6 +105,7 @@ class Detector(
             detectorListener.onDetect(bestBoxes, inferenceTime)
         }
 
+
         // Clear detected items after each frame
 //        detectedItems.clear()
 
