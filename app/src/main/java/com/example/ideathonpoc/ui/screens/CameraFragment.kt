@@ -5,14 +5,17 @@ import android.app.AlertDialog
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.graphics.Matrix
 import android.net.Uri
 import android.os.Bundle
+import android.os.CountDownTimer
 import android.os.Handler
 import android.os.Looper
 import android.speech.tts.TextToSpeech
 import android.text.Html
 import android.util.Log
+import android.util.Size
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -35,6 +38,7 @@ import com.example.ideathonpoc.ui.modelfiles.BoundingBox
 import com.example.ideathonpoc.ui.modelfiles.Constants
 import com.example.ideathonpoc.ui.modelfiles.Detector
 import java.io.File
+import java.io.FileOutputStream
 import java.util.Locale
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
@@ -59,7 +63,6 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
     private lateinit var detectionRunnable: Runnable
     private var isDetectionRunning = false
     private var selectedPermit: String? = null
-
 
 
     private val requestPermissionLauncher = registerForActivityResult(
@@ -336,24 +339,81 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
             }
             textToSpeech.speak(message, TextToSpeech.QUEUE_FLUSH, null, null)
 
-        AlertDialog.Builder(requireContext())
-            .setTitle("Missing Safety Items")
-            .setMessage(message)
-            .setPositiveButton("Retry") { _, _ ->
+            val dialog = AlertDialog.Builder(requireContext())
+                .setTitle("Missing Safety Items")
+                .setMessage(message)
+                .setCancelable(false)
+                .create()
+
+            dialog.setButton(AlertDialog.BUTTON_POSITIVE, "Retry (5)") { _, _ ->
                 detector.detectedItems.clear()
                 startDetectionTimer()
             }
-            .setCancelable(false)
-            .show()
+            dialog.show()
+            val positiveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
+
+            object : CountDownTimer(5000, 1000) {
+                override fun onTick(millisUntilFinished: Long) {
+                    val secondsLeft = millisUntilFinished / 1000
+                    positiveButton.text = "Retry ($secondsLeft)"
+                }
+
+                override fun onFinish() {
+                    dialog.getButton(AlertDialog.BUTTON_POSITIVE).performClick()
+                }
+
+            }.start()
         }
     }
 
-
+//    private fun takeScreenshot() {
+//        val imageCapture = ImageCapture.Builder()
+//            .setCaptureMode(ImageCapture.CAPTURE_MODE_MAXIMIZE_QUALITY)
+//            .setTargetRotation(binding.viewFinder.display.rotation)
+//            .build()
+//
+//        // Unbind existing use cases and rebind with imageCapture
+//        cameraProvider?.unbindAll()
+//        camera = cameraProvider?.bindToLifecycle(
+//            viewLifecycleOwner,
+//            cameraSelector,
+//            preview,
+//            imageAnalyzer,
+//            imageCapture
+//        )
+//
+//        val outputDirectory = getOutputDirectory()
+//        val photoFile = File(
+//            outputDirectory,
+//            "Screenshot_${System.currentTimeMillis()}.jpg"
+//        )
+//
+//        val outputOptions = ImageCapture.OutputFileOptions.Builder(photoFile).build()
+//
+//        imageCapture.takePicture(
+//            outputOptions,
+//            ContextCompat.getMainExecutor(requireContext()),
+//            object : ImageCapture.OnImageSavedCallback {
+//                override fun onImageSaved(output: ImageCapture.OutputFileResults) {
+//                    val savedUri = output.savedUri ?: Uri.fromFile(photoFile)
+//                    Log.d(TAG, "Photo capture succeeded: $savedUri")
+//
+//                    // Navigate to ResultActivity with the captured image path
+//                    navigateToResultActivity(photoFile.absolutePath, System.currentTimeMillis())
+//                }
+//
+//                override fun onError(exc: ImageCaptureException) {
+//                    Log.e(TAG, "Photo capture failed: ${exc.message}", exc)
+//                }
+//            }
+//        )
+//    }
 
     private fun takeScreenshot() {
         val imageCapture = ImageCapture.Builder()
-            .setCaptureMode(ImageCapture.CAPTURE_MODE_MAXIMIZE_QUALITY)
+            .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
             .setTargetRotation(binding.viewFinder.display.rotation)
+            .setTargetResolution(Size(640, 480)) // Set target resolution for portrait mode
             .build()
 
         // Unbind existing use cases and rebind with imageCapture
@@ -382,6 +442,9 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
                     val savedUri = output.savedUri ?: Uri.fromFile(photoFile)
                     Log.d(TAG, "Photo capture succeeded: $savedUri")
 
+                    // Adjust rotation if necessary
+                    adjustImageRotation(photoFile)
+
                     // Navigate to ResultActivity with the captured image path
                     navigateToResultActivity(photoFile.absolutePath, System.currentTimeMillis())
                 }
@@ -391,6 +454,31 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
                 }
             }
         )
+    }
+
+    private fun adjustImageRotation(photoFile: File) {
+        try {
+            val bitmap = BitmapFactory.decodeFile(photoFile.path)
+            val matrix = Matrix()
+
+            // Adjust the rotation to ensure portrait mode
+            matrix.postRotate(90f) // Rotate by 90 degrees if necessary
+
+            val rotatedBitmap = Bitmap.createBitmap(
+                bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true
+            )
+
+            // Save the rotated bitmap back to the file
+            FileOutputStream(photoFile).use { out ->
+                rotatedBitmap.compress(Bitmap.CompressFormat.JPEG, 100, out)
+            }
+
+            // Recycle the bitmaps to free memory
+            bitmap.recycle()
+            rotatedBitmap.recycle()
+        } catch (e: Exception) {
+            Log.e(TAG, "Error adjusting image rotation", e)
+        }
     }
 
     private fun getOutputDirectory(): File {
