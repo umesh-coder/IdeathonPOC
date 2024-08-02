@@ -119,16 +119,16 @@ class OverlayView(context: Context?, attrs: AttributeSet?) : View(context, attrs
 
     fun setResults(boundingBoxes: List<BoundingBox>) {
         results = boundingBoxes
-        invalidate()
+//        invalidate()
     }
 
     fun setRequiredItems(items: List<String>) {
         requiredItems = items
-        invalidate()
+//        invalidate()
     }
 
     fun setDetectedItems(items: Set<String>) {
         detectedItems.addAll(items)
-        invalidate()
+//        invalidate()
     }
 }

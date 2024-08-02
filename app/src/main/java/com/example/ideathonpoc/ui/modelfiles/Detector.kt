@@ -216,7 +216,7 @@ class Detector(
         // Check if all required items have been detected
         if (detectedItems.size == requiredSafetyItems.size && detectedItems.containsAll(requiredSafetyItems)) {
             detectorListener.onAllRequiredItemsDetected()
-            detectedItems.clear()
+//            detectedItems.clear()
         }
 
         if (boundingBoxes.isEmpty()) return null
@@ -269,7 +269,7 @@ class Detector(
         private const val INPUT_STANDARD_DEVIATION = 255f
         private val INPUT_IMAGE_TYPE = DataType.FLOAT32
         private val OUTPUT_IMAGE_TYPE = DataType.FLOAT32
-        private const val CONFIDENCE_THRESHOLD = 0.4F
+        private const val CONFIDENCE_THRESHOLD = 0.5F
         private const val IOU_THRESHOLD = 0.5F
     }
 }
