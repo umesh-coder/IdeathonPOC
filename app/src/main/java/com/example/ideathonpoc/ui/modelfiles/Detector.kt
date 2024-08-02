@@ -22,7 +22,8 @@ class Detector(
     private val modelPath: String,
     private val labelPath: String,
     private val detectorListener: DetectorListener,
-    private val requiredSafetyItems: List<String>
+    private val requiredSafetyItems: MutableList<String>,
+    private val detectOneByOne:Boolean
 ) {
 
     private var interpreter: Interpreter? = null
@@ -208,20 +209,34 @@ class Detector(
                     // Mark the item as detected
                     if ( clsName in requiredSafetyItems ) {
                         detectedItems.add(clsName)
+                        if(detectOneByOne){
+                            detectorListener.setNextItem()
+                        }
                     }
+
                 }
             }
         }
 
+
         // Check if all required items have been detected
         if (detectedItems.size == requiredSafetyItems.size && detectedItems.containsAll(requiredSafetyItems)) {
-            detectorListener.onAllRequiredItemsDetected()
-            detectedItems.clear()
+            if(detectOneByOne){
+                detectorListener.currentItemDetected()
+            }
+            else {
+                detectorListener.onAllRequiredItemsDetected()
+                detectedItems.clear()
+            }
         }
 
         if (boundingBoxes.isEmpty()) return null
 
         return applyNMS(boundingBoxes)
+    }
+    fun setRequiredItems(item:MutableList<String>){
+        requiredSafetyItems.clear()
+        requiredSafetyItems.addAll(item)
     }
 
 
@@ -262,7 +277,11 @@ class Detector(
         fun onEmptyDetect()
         fun onDetect(boundingBoxes: List<BoundingBox>, inferenceTime: Long)
         fun onAllRequiredItemsDetected()
+        fun setNextItem()
+        fun currentItemDetected()
     }
+
+
 
     companion object {
         private const val INPUT_MEAN = 0f

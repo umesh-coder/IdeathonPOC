@@ -57,12 +57,16 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
     private var cameraProvider: ProcessCameraProvider? = null
     private lateinit var detector: Detector
     private lateinit var cameraExecutor: ExecutorService
-    private lateinit var requiredSafetyItems: List<String>
+    private lateinit var requiredSafetyItems: MutableList<String>
     private lateinit var textToSpeech: TextToSpeech
     private val handler = Handler(Looper.getMainLooper())
     private lateinit var detectionRunnable: Runnable
     private var isDetectionRunning = false
     private var selectedPermit: String? = null
+    private val detectOneByOne:Boolean = true
+    private lateinit var itemsToDetect:ArrayDeque<String>
+    private var currentItemToDetect:String? = null
+
 
 
     private val requestPermissionLauncher = registerForActivityResult(
@@ -81,7 +85,7 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
         savedInstanceState: Bundle?
     ): View {
         _binding = FragmentCameraBinding.inflate(inflater, container, false)
-        requiredSafetyItems = arguments?.getStringArrayList("REQUIRED_ITEMS") ?: listOf()
+        requiredSafetyItems = arguments?.getStringArrayList("REQUIRED_ITEMS") as MutableList<String>
         selectedPermit = arguments?.getString("PERMIT")
         textToSpeech = TextToSpeech(requireContext()) { status ->
             if (status == TextToSpeech.SUCCESS) {
@@ -93,7 +97,16 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        binding.overlay.setRequiredItems(requiredSafetyItems)
+        if(detectOneByOne){
+            itemsToDetect = ArrayDeque(requiredSafetyItems)
+            nextItemToDetect()
+            if(currentItemToDetect!=null) {
+                binding.overlay.setRequiredItems(listOf(currentItemToDetect!!))
+            }
+        }
+        else {
+            binding.overlay.setRequiredItems(requiredSafetyItems)
+        }
 
 
         try {
@@ -102,7 +115,12 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
                 Constants.MODEL_PATH,
                 Constants.LABELS_PATH,
                 this,
-                requiredSafetyItems
+                if(detectOneByOne){
+                    mutableListOf(currentItemToDetect!!)
+                } else {
+                    requiredSafetyItems
+                },
+                detectOneByOne
             )
             detector.setup()
 
@@ -131,6 +149,16 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
         }
         startDetectionTimer()
     }
+
+    private fun nextItemToDetect() {
+        currentItemToDetect = itemsToDetect.removeFirstOrNull()
+        if(currentItemToDetect == null){
+            onAllRequiredItemsDetected()
+        }
+
+    }
+
+
 
     override fun onPause() {
         super.onPause()
@@ -288,6 +316,7 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
             }
         }
 
+
     }
 
     companion object {
@@ -307,10 +336,29 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
         // Navigate to ResultActivity after a delay
 
     }
+
+        override fun setNextItem() {
+            nextItemToDetect()
+            detector.setRequiredItems(mutableListOf(currentItemToDetect!!))
+        }
+
+        override fun currentItemDetected() {
+
+            if(currentItemToDetect!=null) {
+
+                binding.overlay.setRequiredItems(listOf(currentItemToDetect!!))
+            }
+        }
+
     private fun startDetectionTimer() {
         detectionRunnable = Runnable {
             if (isDetectionRunning) {
-                showMissingItemsDialog()
+                if(detectOneByOne){
+                    showMissingItemsDialog(currentItemToDetect)
+                }
+                else {
+                    showMissingItemsDialog()
+                }
             }
         }
         handler.postDelayed(detectionRunnable, DETECTION_TIMEOUT)
@@ -321,48 +369,59 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
         handler.removeCallbacks(detectionRunnable)
         startDetectionTimer()
     }
-    private fun showMissingItemsDialog() {
-        val missingItems = requiredSafetyItems.filterNot { it in detector.detectedItems }
-        if(missingItems.isNotEmpty()) {
-
-            val message = Html.fromHtml("${missingItems.joinToString(", ")}  missing in your <b>P P E</b>, please wear right <b>P P E</b> to proceed for job.")
-
-            Log.e(TAG, "Languages: "+textToSpeech.getAvailableLanguages());
-            val locale = Locale("hi_IN")
-
-            textToSpeech.setLanguage(locale)
-            textToSpeech.setSpeechRate(0.8f)
-            if (textToSpeech.isLanguageAvailable(locale) == TextToSpeech.LANG_AVAILABLE) {
-                textToSpeech.setLanguage(locale)
-            } else {
-                textToSpeech.setLanguage(Locale.ENGLISH)
-            }
-            textToSpeech.speak(message, TextToSpeech.QUEUE_FLUSH, null, null)
-
+    private fun showMissingItemsDialog(item:String? = null) {
+        if(item!=null){
             val dialog = AlertDialog.Builder(requireContext())
                 .setTitle("Missing Safety Items")
-                .setMessage(message)
+                .setMessage("$item missing")
                 .setCancelable(false)
                 .create()
-
-            dialog.setButton(AlertDialog.BUTTON_POSITIVE, "Retry (5)") { _, _ ->
-                detector.detectedItems.clear()
-                startDetectionTimer()
-            }
             dialog.show()
-            val positiveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
+        }
+        else {
+            val missingItems = requiredSafetyItems.filterNot { it in detector.detectedItems }
+            if (missingItems.isNotEmpty()) {
 
-            object : CountDownTimer(5000, 1000) {
-                override fun onTick(millisUntilFinished: Long) {
-                    val secondsLeft = millisUntilFinished / 1000
-                    positiveButton.text = "Retry ($secondsLeft)"
+                val message =
+                    Html.fromHtml("${missingItems.joinToString(", ")}  missing in your <b>P P E</b>, please wear right <b>P P E</b> to proceed for job.")
+
+                Log.e(TAG, "Languages: " + textToSpeech.getAvailableLanguages());
+                val locale = Locale("hi_IN")
+
+                textToSpeech.setLanguage(locale)
+                textToSpeech.setSpeechRate(0.8f)
+                if (textToSpeech.isLanguageAvailable(locale) == TextToSpeech.LANG_AVAILABLE) {
+                    textToSpeech.setLanguage(locale)
+                } else {
+                    textToSpeech.setLanguage(Locale.ENGLISH)
                 }
+                textToSpeech.speak(message, TextToSpeech.QUEUE_FLUSH, null, null)
 
-                override fun onFinish() {
-                    dialog.getButton(AlertDialog.BUTTON_POSITIVE).performClick()
+                val dialog = AlertDialog.Builder(requireContext())
+                    .setTitle("Missing Safety Items")
+                    .setMessage(message)
+                    .setCancelable(false)
+                    .create()
+
+                dialog.setButton(AlertDialog.BUTTON_POSITIVE, "Retry (5)") { _, _ ->
+                    detector.detectedItems.clear()
+                    startDetectionTimer()
                 }
+                dialog.show()
+                val positiveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
 
-            }.start()
+                object : CountDownTimer(5000, 1000) {
+                    override fun onTick(millisUntilFinished: Long) {
+                        val secondsLeft = millisUntilFinished / 1000
+                        positiveButton.text = "Retry ($secondsLeft)"
+                    }
+
+                    override fun onFinish() {
+                        dialog.getButton(AlertDialog.BUTTON_POSITIVE).performClick()
+                    }
+
+                }.start()
+            }
         }
     }
 
