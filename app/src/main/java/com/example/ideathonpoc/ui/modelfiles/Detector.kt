@@ -106,7 +106,7 @@ class Detector(
         }
 
         // Clear detected items after each frame
-        detectedItems.clear()
+//        detectedItems.clear()
 
 
     }
