@@ -17,6 +17,8 @@ class OverlayView(context: Context?, attrs: AttributeSet?) : View(context, attrs
     private var textPaint = Paint()
 
     private var bounds = Rect()
+    private var requiredItems = listOf<String>()
+    private var detectedItems = mutableSetOf<String>()
 
     init {
         initPaints()
@@ -92,10 +94,32 @@ class OverlayView(context: Context?, attrs: AttributeSet?) : View(context, attrs
             )
             canvas.drawText(drawableText, left, top + bounds.height(), textPaint)
         }
+        // Draw ticks and crosses for detected and required items in the top-left corner
+        val startX = 10f
+        val startY = 10f
+        val lineHeight = 60f
+
+        requiredItems.forEachIndexed { index, item ->
+            val statusText = if (detectedItems.contains(item)) "✓ $item" else "✗ $item"
+            val x = startX
+            val y = startY + (index + 1) * lineHeight
+
+            textPaint.color = if (detectedItems.contains(item)) Color.GREEN else Color.RED
+            canvas.drawText(statusText, x, y, textPaint)
+        }
     }
 
     fun setResults(boundingBoxes: List<BoundingBox>) {
         results = boundingBoxes
+        invalidate()
+    }
+    fun setRequiredItems(items: List<String>) {
+        requiredItems = items
+        invalidate()
+    }
+
+    fun setDetectedItems(items: Set<String>) {
+        detectedItems = items.toMutableSet()
         invalidate()
     }
 

@@ -16,6 +16,7 @@ pluginManagement {
                 password = providers.gradleProperty("gpr.key").orNull ?: System.getenv("GPR_API_KEY")
             }
         }
+        maven { url = uri("https://jitpack.io") }
         gradlePluginPortal()
 
     }

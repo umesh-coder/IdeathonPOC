@@ -33,6 +33,7 @@ import com.example.ideathonpoc.databinding.FragmentCameraBinding
 import com.example.ideathonpoc.ui.modelfiles.BoundingBox
 import com.example.ideathonpoc.ui.modelfiles.Constants
 import com.example.ideathonpoc.ui.modelfiles.Detector
+import com.google.android.material.bottomnavigation.BottomNavigationView
 import java.io.File
 import java.util.Locale
 import java.util.concurrent.ExecutorService
@@ -57,6 +58,8 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
     private val handler = Handler(Looper.getMainLooper())
     private lateinit var detectionRunnable: Runnable
     private var isDetectionRunning = false
+    private var selectedPermit: String? = null
+
 
 
     private val requestPermissionLauncher = registerForActivityResult(
@@ -75,7 +78,8 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
         savedInstanceState: Bundle?
     ): View {
         _binding = FragmentCameraBinding.inflate(inflater, container, false)
-        requiredSafetyItems = listOf("Helmet", "Safety Vest", "Gloves")
+        requiredSafetyItems = arguments?.getStringArrayList("REQUIRED_ITEMS") ?: listOf()
+        selectedPermit = arguments?.getString("PERMIT")
         textToSpeech = TextToSpeech(requireContext()) { status ->
             if (status == TextToSpeech.SUCCESS) {
                 textToSpeech.language = Locale.UK
@@ -86,6 +90,8 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        binding.overlay.setRequiredItems(requiredSafetyItems)
+
 
         try {
             detector = Detector(
@@ -191,12 +197,12 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
             val rotation = binding.viewFinder.display.rotation
 
             preview = Preview.Builder()
-                .setTargetAspectRatio(AspectRatio.RATIO_4_3)
+                .setTargetAspectRatio(AspectRatio.RATIO_DEFAULT)
                 .setTargetRotation(rotation)
                 .build()
 
             imageAnalyzer = ImageAnalysis.Builder()
-                .setTargetAspectRatio(AspectRatio.RATIO_4_3)
+                .setTargetAspectRatio(AspectRatio.RATIO_DEFAULT)
                 .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                 .setTargetRotation(binding.viewFinder.display.rotation)
                 .setOutputImageFormat(ImageAnalysis.OUTPUT_IMAGE_FORMAT_RGBA_8888)
@@ -272,6 +278,7 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
             binding.root.post {
                 binding.inferenceTime.text = "${inferenceTime}ms"
                 binding.overlay.apply {
+                    setDetectedItems(detector.detectedItems)
                     setResults(boundingBoxes)
                     invalidate()
                 }
@@ -314,8 +321,8 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
     private fun showMissingItemsDialog() {
         val missingItems = requiredSafetyItems.filterNot { it in detector.detectedItems }
         if(missingItems.isNotEmpty()) {
-            val permit = "GENERAL"
-            val message = "As per the $permit Work permit ${missingItems.joinToString(", ")}  missing in your PPE, please wear right PPE to proceed for job "
+
+            val message = "As per the $selectedPermit Work permit ${missingItems.joinToString(", ")}  missing in your PPE, please wear right PPE to proceed for job "
             textToSpeech.speak(message, TextToSpeech.QUEUE_FLUSH, null, null)
 
         AlertDialog.Builder(requireContext())
@@ -324,9 +331,6 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
             .setPositiveButton("Retry") { _, _ ->
                 detector.detectedItems.clear()
                 startDetectionTimer()
-            }
-            .setNegativeButton("Go Back") { _, _ ->
-                navigateBack()
             }
             .setCancelable(false)
             .show()
@@ -392,4 +396,6 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
         }
         startActivity(intent)
     }
+
+
 }

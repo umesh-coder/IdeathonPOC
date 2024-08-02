@@ -2,7 +2,6 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
 
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/home_container"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
@@ -48,18 +47,43 @@
 
     </androidx.cardview.widget.CardView>
 
-    <ImageButton
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/permitDropdownLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="20dp"
+
+        android:hint="Select Permit"
+        app:layout_constraintBottom_toTopOf="@+id/image_view_card"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textView">
+
+        <AutoCompleteTextView
+            android:id="@+id/permitDropdown"
+            android:layout_width="match_parent"
+            android:layout_height="30dp"
+            android:gravity="center" />
+
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <com.airbnb.lottie.LottieAnimationView
         android:id="@+id/live_capture"
-        android:layout_width="100dp"
+
+        android:layout_width="150dp"
         android:layout_height="100dp"
         android:layout_gravity="center"
         android:layout_margin="16dp"
         android:background="@color/white"
         android:scaleType="centerCrop"
-        android:src="@drawable/scan_icon"
         android:text="Live Capture"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/image_view_card"
+        app:lottie_autoPlay="true"
+        app:lottie_loop="true"
+        app:lottie_rawRes="@raw/scanbutton" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
