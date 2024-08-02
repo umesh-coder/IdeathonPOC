@@ -14,6 +14,8 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
 
         super.onCreate(savedInstanceState)
+        Thread.sleep(200)
+        installSplashScreen()
         setContentView(R.layout.activity_main)
         loadFragment("HomeFragment")
         bottomNav = findViewById<BottomNavigationView>(R.id.bottomNav)!!

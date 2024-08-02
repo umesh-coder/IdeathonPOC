@@ -9,6 +9,7 @@ import android.speech.tts.TextToSpeech
 import android.util.Log
 import android.view.View
 import android.widget.ImageView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.ideathonpoc.R
 import com.example.ideathonpoc.databinding.ActivityResultBinding
@@ -26,8 +27,7 @@ class ResultActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityResultBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
-        handler.postDelayed({
+        handler.postDelayed(Runnable {
             binding.resultOutputContainer.visibility = View.VISIBLE
             binding.successAnimationView.visibility = View.GONE
         }, 3000)
@@ -44,6 +44,7 @@ class ResultActivity : AppCompatActivity() {
                 Log.e(TAG, "Initialization failed")
             }
         }
+
 
         val imagePath = intent.getStringExtra("imagePath")
         val timestamp = intent.getLongExtra("timestamp", 0L)
@@ -72,6 +73,12 @@ class ResultActivity : AppCompatActivity() {
         super.onDestroy()
         textToSpeech.stop()
         textToSpeech.shutdown()
+
+    }
+
+    override fun onBackPressed() {
+        Toast.makeText(this, "Back pressed", Toast.LENGTH_SHORT).show()
+        super.onBackPressed()
     }
 
     companion object {
