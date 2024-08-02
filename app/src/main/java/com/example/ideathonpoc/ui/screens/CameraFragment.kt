@@ -11,7 +11,6 @@ import android.graphics.Matrix
 import android.media.MediaPlayer
 import android.net.Uri
 import android.os.Bundle
-import android.os.CountDownTimer
 import android.os.Handler
 import android.os.Looper
 import android.speech.tts.TextToSpeech
@@ -21,6 +20,7 @@ import android.util.Size
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.core.AspectRatio
@@ -50,8 +50,8 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
     private var _binding: FragmentCameraBinding? = null
     private val binding get() = _binding!!
     private var latestFrame: Bitmap? = null
-    private var isFrontCamera = false
-    private var cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
+    private var isFrontCamera = true
+    private var cameraSelector = CameraSelector.DEFAULT_FRONT_CAMERA
 
     private var preview: Preview? = null
     private var imageAnalyzer: ImageAnalysis? = null
@@ -181,6 +181,7 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
 
     private fun startCamera() {
         val cameraProviderFuture = ProcessCameraProvider.getInstance(requireContext())
+
         cameraProviderFuture.addListener({
             try {
                 cameraProvider = cameraProviderFuture.get()
@@ -195,6 +196,7 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
     private fun bindCameraUseCases() {
         val cameraProvider = cameraProvider ?: run {
             Log.e(TAG, "Camera initialization failed.")
+            Toast.makeText(activity, "Camera initialization failed.", Toast.LENGTH_SHORT).show()
             navigateBack()
             return
         }
@@ -215,7 +217,9 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
                 .build()
 
             imageAnalyzer?.setAnalyzer(cameraExecutor) { imageProxy ->
-                processImage(imageProxy)
+                if (isDetectionRunning) {
+                    processImage(imageProxy)
+                }
             }
 
             cameraProvider.unbindAll()
@@ -305,17 +309,21 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
         // This method will be called when all required safety items are detected
         binding.root.postDelayed({
             takeScreenshot()
-        }, 10)
+        }, 100)
 
         // Navigate to ResultActivity after a delay
 
     }
+
     private fun startDetectionTimer() {
         detectionRunnable = Runnable {
             if (isDetectionRunning) {
+                handler.removeCallbacks(detectionRunnable)
+                isDetectionRunning = false
                 val resID = resources.getIdentifier("failure_sound", "raw", activity?.packageName)
                 playMedia(context,resID)
                 showMissingItemsDialog()
+
             }
         }
         handler.postDelayed(detectionRunnable, DETECTION_TIMEOUT)
@@ -337,13 +345,15 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
         handler.removeCallbacks(detectionRunnable)
         startDetectionTimer()
     }
+
     private fun showMissingItemsDialog() {
         val missingItems = requiredSafetyItems.filterNot { it in detector.detectedItems }
-        if(missingItems.isNotEmpty()) {
+        if (missingItems.isNotEmpty()) {
 
-            val message = Html.fromHtml("${missingItems.joinToString(", ")}  missing in your <b>P P E</b>, please wear right <b>P P E</b> to proceed for job.")
+            val message =
+                Html.fromHtml("${missingItems.joinToString(", ")}  missing in your <b>P P E</b>, please wear right <b>P P E</b> to proceed for job.")
 
-            Log.e(TAG, "Languages: "+textToSpeech.getAvailableLanguages());
+            Log.e(TAG, "Languages: " + textToSpeech.availableLanguages)
             val locale = Locale("hi_IN")
 
             textToSpeech.setLanguage(locale)
@@ -361,14 +371,20 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
                 .setCancelable(false)
                 .create()
 
-            dialog.setButton(AlertDialog.BUTTON_POSITIVE, "Retry (5)") { _, _ ->
-                detector.detectedItems.clear()
+            dialog.setButton(AlertDialog.BUTTON_POSITIVE, "Rescan") { _, _ ->
+//                detector.detectedItems.clear()
                 startDetectionTimer()
             }
             dialog.show()
             val positiveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
 
-            object : CountDownTimer(5000, 1000) {
+            positiveButton.setOnClickListener {
+                dialog.dismiss()
+                detector.detectedItems
+                startDetectionTimer()
+            }
+
+            /*object : CountDownTimer(5000, 1000) {
                 override fun onTick(millisUntilFinished: Long) {
                     val secondsLeft = millisUntilFinished / 1000
                     positiveButton.text = "Rescan ($secondsLeft)"
@@ -378,7 +394,7 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
                     dialog.getButton(AlertDialog.BUTTON_POSITIVE).performClick()
                 }
 
-            }.start()
+            }.start()*/
         }
     }
 
@@ -477,9 +493,13 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
             val bitmap = BitmapFactory.decodeFile(photoFile.path)
             val matrix = Matrix()
 
-            // Adjust the rotation to ensure portrait mode
-            matrix.postRotate(90f) // Rotate by 90 degrees if necessary
 
+            // Adjust the rotation to ensure portrait mode
+            if (isFrontCamera) {
+                matrix.postRotate(270f) // Rotate by 90 degrees if necessary?
+            } else {
+                matrix.postRotate(90f)
+            }
             val rotatedBitmap = Bitmap.createBitmap(
                 bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true
             )
@@ -505,11 +525,13 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
     }
 
     private fun navigateToResultActivity(imagePath: String, timestamp: Long) {
-        val intent = Intent(requireContext(), ResultActivity::class.java).apply {
-            putExtra("imagePath", imagePath)
-            putExtra("timestamp", timestamp)
-        }
-        startActivity(intent)
+        Handler(Looper.getMainLooper()).postDelayed({
+            val intent = Intent(requireContext(), ResultActivity::class.java).apply {
+                putExtra("imagePath", imagePath)
+                putExtra("timestamp", timestamp)
+            }
+            startActivity(intent)
+        }, 100) // 3000 milliseconds delay (5 seconds)
     }
 
 

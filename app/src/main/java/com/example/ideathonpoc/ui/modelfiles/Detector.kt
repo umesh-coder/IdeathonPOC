@@ -216,7 +216,7 @@ class Detector(
         // Check if all required items have been detected
         if (detectedItems.size == requiredSafetyItems.size && detectedItems.containsAll(requiredSafetyItems)) {
             detectorListener.onAllRequiredItemsDetected()
-            detectedItems.clear()
+//            detectedItems.clear()
         }
 
         if (boundingBoxes.isEmpty()) return null
