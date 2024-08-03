@@ -2,14 +2,15 @@ package com.example.ideathonpoc.ui.screens
 
 import android.Manifest
 import android.app.AlertDialog
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Matrix
+import android.media.MediaPlayer
 import android.net.Uri
 import android.os.Bundle
-import android.os.CountDownTimer
 import android.os.Handler
 import android.os.Looper
 import android.speech.tts.TextToSpeech
@@ -19,6 +20,7 @@ import android.util.Size
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.core.AspectRatio
@@ -48,8 +50,8 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
     private var _binding: FragmentCameraBinding? = null
     private val binding get() = _binding!!
     private var latestFrame: Bitmap? = null
-    private var isFrontCamera = false
-    private var cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
+    private var isFrontCamera = true
+    private var cameraSelector = CameraSelector.DEFAULT_FRONT_CAMERA
 
     private var preview: Preview? = null
     private var imageAnalyzer: ImageAnalysis? = null
@@ -63,6 +65,9 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
     private lateinit var detectionRunnable: Runnable
     private var isDetectionRunning = false
     private var selectedPermit: String? = null
+    private  var mediaPlayer: MediaPlayer = MediaPlayer()
+
+    private var isFragmentVisible = true
 
 
     private val requestPermissionLauncher = registerForActivityResult(
@@ -97,14 +102,7 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
 
 
         try {
-            detector = Detector(
-                requireContext(),
-                Constants.MODEL_PATH,
-                Constants.LABELS_PATH,
-                this,
-                requiredSafetyItems
-            )
-            detector.setup()
+            initializeDetector()
 
             if (allPermissionsGranted()) {
                 startCamera()
@@ -132,11 +130,24 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
         startDetectionTimer()
     }
 
+    private fun initializeDetector() {
+        detector = Detector(
+            requireContext(),
+            Constants.MODEL_PATH,
+            Constants.LABELS_PATH,
+            this,
+            requiredSafetyItems
+        )
+        detector.setup()
+    }
+
     override fun onPause() {
         super.onPause()
+        isFragmentVisible = false
+        cleanupResources()
+
         try {
-            imageAnalyzer?.clearAnalyzer()
-            cameraProvider?.unbindAll()
+            cleanupResources()
         } catch (e: Exception) {
         }
     }
@@ -144,6 +155,7 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
     override fun onDestroyView() {
         super.onDestroyView()
         cleanupResources()
+        textToSpeech.shutdown()
         _binding = null
     }
 
@@ -170,7 +182,7 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
             cameraProvider?.unbindAll()
             detector.clear()
             textToSpeech.stop()
-            textToSpeech.shutdown()
+
             cameraExecutor.shutdownNow()
         } catch (e: Exception) {
         }
@@ -178,6 +190,7 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
 
     private fun startCamera() {
         val cameraProviderFuture = ProcessCameraProvider.getInstance(requireContext())
+
         cameraProviderFuture.addListener({
             try {
                 cameraProvider = cameraProviderFuture.get()
@@ -192,6 +205,7 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
     private fun bindCameraUseCases() {
         val cameraProvider = cameraProvider ?: run {
             Log.e(TAG, "Camera initialization failed.")
+            Toast.makeText(activity, "Camera initialization failed.", Toast.LENGTH_SHORT).show()
             navigateBack()
             return
         }
@@ -204,31 +218,40 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
                 .setTargetRotation(rotation)
                 .build()
 
-            imageAnalyzer = ImageAnalysis.Builder()
-                .setTargetAspectRatio(AspectRatio.RATIO_DEFAULT)
-                .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-                .setTargetRotation(binding.viewFinder.display.rotation)
-                .setOutputImageFormat(ImageAnalysis.OUTPUT_IMAGE_FORMAT_RGBA_8888)
-                .build()
+            analyzeImage()
 
-            imageAnalyzer?.setAnalyzer(cameraExecutor) { imageProxy ->
-                processImage(imageProxy)
-            }
 
-            cameraProvider.unbindAll()
 
-            camera = cameraProvider.bindToLifecycle(
-                viewLifecycleOwner,
-                cameraSelector,
-                preview,
-                imageAnalyzer
-            )
-
-            preview?.setSurfaceProvider(binding.viewFinder.surfaceProvider)
         } catch (exc: Exception) {
             Log.e(TAG, "Use case binding failed", exc)
             navigateBack()
         }
+    }
+
+    private fun analyzeImage() {
+        imageAnalyzer = null;
+        imageAnalyzer = ImageAnalysis.Builder()
+            .setTargetAspectRatio(AspectRatio.RATIO_DEFAULT)
+            .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+            .setTargetRotation(binding.viewFinder.display.rotation)
+            .setOutputImageFormat(ImageAnalysis.OUTPUT_IMAGE_FORMAT_RGBA_8888)
+            .build()
+
+        imageAnalyzer?.setAnalyzer(cameraExecutor) { imageProxy ->
+            if (isDetectionRunning) {
+                processImage(imageProxy)
+            }
+        }
+
+        cameraProvider?.unbindAll()
+
+        camera = cameraProvider?.bindToLifecycle(
+            viewLifecycleOwner,
+            cameraSelector,
+            preview,
+            imageAnalyzer
+        )
+        preview?.setSurfaceProvider(binding.viewFinder.surfaceProvider)
     }
 
     private fun processImage(imageProxy: ImageProxy) {
@@ -266,6 +289,13 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
         }
     }
 
+    private fun isFragmentDisplayed(): Boolean {
+        val isDisplayed = isFragmentVisible && isAdded && !isDetached && !isRemoving && view != null && view?.windowToken != null && view?.visibility == View.VISIBLE
+        if (!isDisplayed) {
+            cleanupResources()
+        }
+        return isDisplayed
+    }
     private fun allPermissionsGranted() = REQUIRED_PERMISSIONS.all {
         ContextCompat.checkSelfPermission(requireContext(), it) == PackageManager.PERMISSION_GRANTED
     }
@@ -276,6 +306,11 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
         }
     }
 
+    override fun onResume() {
+        super.onResume()
+        isFragmentVisible = true
+
+    }
     override fun onDetect(boundingBoxes: List<BoundingBox>, inferenceTime: Long) {
         _binding?.let { binding ->
             binding.root.post {
@@ -290,6 +325,11 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
 
     }
 
+    override fun onStop() {
+        super.onStop()
+        cleanupResources()
+
+    }
     companion object {
         private const val TAG = "CameraFragment"
         private const val DETECTION_TIMEOUT = 10000L
@@ -300,42 +340,72 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
         handler.removeCallbacks(detectionRunnable)
         isDetectionRunning = false
         // This method will be called when all required safety items are detected
+        if(!isFragmentVisible){
+            return
+        }
         binding.root.postDelayed({
+            val resID = resources.getIdentifier("success_sound", "raw", activity?.packageName)
+            playMedia(context,resID)
+            Toast.makeText(activity, "Taking your picture dont move",Toast.LENGTH_SHORT).show()
             takeScreenshot()
-        }, 10)
+        }, 1000)
 
         // Navigate to ResultActivity after a delay
 
     }
+
     private fun startDetectionTimer() {
+        if(!isFragmentVisible){
+            return
+        }
         detectionRunnable = Runnable {
             if (isDetectionRunning) {
+                handler.removeCallbacks(detectionRunnable)
+                isDetectionRunning = false
+                val resID = resources.getIdentifier("failure_sound", "raw", activity?.packageName)
+                playMedia(context,resID)
                 showMissingItemsDialog()
+
             }
         }
         handler.postDelayed(detectionRunnable, DETECTION_TIMEOUT)
         isDetectionRunning = true
     }
 
+    private fun playMedia(context: Context?, resID: Int) {
+        try {
+            mediaPlayer = MediaPlayer.create(context, resID)
+            mediaPlayer.start()
+            handler.postDelayed({  mediaPlayer.stop()},2000)
+
+        } catch (exception: Exception) {
+            exception.printStackTrace()
+        }
+    }
+
     private fun resetDetectionTimer() {
         handler.removeCallbacks(detectionRunnable)
         startDetectionTimer()
     }
+
     private fun showMissingItemsDialog() {
         val missingItems = requiredSafetyItems.filterNot { it in detector.detectedItems }
-        if(missingItems.isNotEmpty()) {
+        if (missingItems.isNotEmpty()) {
 
-            val message = Html.fromHtml("${missingItems.joinToString(", ")}  missing in your <b>P P E</b>, please wear right <b>P P E</b> to proceed for job.")
+            val message =
+                Html.fromHtml("${missingItems.joinToString(", ")}  missing in your <b>P P E</b>, please wear right <b>P P E</b> to proceed for job.")
 
-            Log.e(TAG, "Languages: "+textToSpeech.getAvailableLanguages());
+            Log.e(TAG, "Languages: " + textToSpeech.availableLanguages)
             val locale = Locale("hi_IN")
-
             textToSpeech.setLanguage(locale)
             textToSpeech.setSpeechRate(0.8f)
             if (textToSpeech.isLanguageAvailable(locale) == TextToSpeech.LANG_AVAILABLE) {
                 textToSpeech.setLanguage(locale)
             } else {
                 textToSpeech.setLanguage(Locale.ENGLISH)
+            }
+            if(!isFragmentVisible){
+                return
             }
             textToSpeech.speak(message, TextToSpeech.QUEUE_FLUSH, null, null)
 
@@ -345,24 +415,35 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
                 .setCancelable(false)
                 .create()
 
-            dialog.setButton(AlertDialog.BUTTON_POSITIVE, "Retry (5)") { _, _ ->
-                detector.detectedItems.clear()
+            dialog.setButton(AlertDialog.BUTTON_POSITIVE, "Rescan") { _, _ ->
+                textToSpeech.stop()
+                detector.detectedItems
                 startDetectionTimer()
             }
             dialog.show()
             val positiveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
 
-            object : CountDownTimer(5000, 1000) {
+            positiveButton.setOnClickListener {
+                dialog.dismiss()
+                textToSpeech.stop()
+                detector.detectedItems
+                isDetectionRunning = true
+                analyzeImage()
+                startDetectionTimer()
+
+            }
+
+            /*object : CountDownTimer(5000, 1000) {
                 override fun onTick(millisUntilFinished: Long) {
                     val secondsLeft = millisUntilFinished / 1000
-                    positiveButton.text = "Retry ($secondsLeft)"
+                    positiveButton.text = "Rescan ($secondsLeft)"
                 }
 
                 override fun onFinish() {
                     dialog.getButton(AlertDialog.BUTTON_POSITIVE).performClick()
                 }
 
-            }.start()
+            }.start()*/
         }
     }
 
@@ -410,6 +491,7 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
 //    }
 
     private fun takeScreenshot() {
+
         val imageCapture = ImageCapture.Builder()
             .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
             .setTargetRotation(binding.viewFinder.display.rotation)
@@ -431,6 +513,7 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
             outputDirectory,
             "Screenshot_${System.currentTimeMillis()}.jpg"
         )
+
 
         val outputOptions = ImageCapture.OutputFileOptions.Builder(photoFile).build()
 
@@ -461,9 +544,13 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
             val bitmap = BitmapFactory.decodeFile(photoFile.path)
             val matrix = Matrix()
 
-            // Adjust the rotation to ensure portrait mode
-            matrix.postRotate(90f) // Rotate by 90 degrees if necessary
 
+            // Adjust the rotation to ensure portrait mode
+            if (isFrontCamera) {
+                matrix.postRotate(270f) // Rotate by 90 degrees if necessary?
+            } else {
+                matrix.postRotate(90f)
+            }
             val rotatedBitmap = Bitmap.createBitmap(
                 bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true
             )
@@ -490,12 +577,16 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
 
     private fun navigateToResultActivity(imagePath: String, timestamp: Long) {
         Handler(Looper.getMainLooper()).postDelayed({
+            // Get the FragmentManager
+            val fragmentManager = requireActivity().supportFragmentManager
+            // Pop the current fragment from the back stack
+            fragmentManager.popBackStack()
             val intent = Intent(requireContext(), ResultActivity::class.java).apply {
                 putExtra("imagePath", imagePath)
                 putExtra("timestamp", timestamp)
             }
             startActivity(intent)
-        }, 3000) // 3000 milliseconds delay (5 seconds)
+        }, 100) // 3000 milliseconds delay (5 seconds)
     }
 
 
