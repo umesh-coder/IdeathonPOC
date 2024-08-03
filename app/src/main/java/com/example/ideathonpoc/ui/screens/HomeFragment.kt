@@ -19,9 +19,10 @@ class HomeFragment : Fragment() {
     private var _binding: FragmentHomeBinding? = null
     private val binding get() = _binding!!
     private val permitMap = mapOf(
-        "General Permit" to listOf("Helmet", "Safety Vest"),
-        "Special Permit" to listOf("Gloves", "Safety Vest"),
-        "High-Risk Permit" to listOf("Helmet", "Safety Vest", "Gloves")
+        "General Permit" to listOf("Helmet", "Safety Vest","Gloves","Safety Glasses","Safety Shoe"),
+        "Hot Work Permit" to listOf("Helmet","Gloves", "Mask","Safety Glasses", "Safety Shoe"),
+        "Cold Work Permit" to listOf("Helmet","Gloves",  "Safety Shoe"),
+        "Chemical Work Permit" to listOf("Helmet","Mask","Gloves", "Safety Glasses", "Safety Shoe","Mask"),
     )
     private var selectedPermit: String? = null
     private var selectedScanType: String? = null
