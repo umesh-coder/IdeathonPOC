@@ -74,11 +74,6 @@ class ResultActivity : AppCompatActivity() {
 
     }
 
-    override fun onPause() {
-        super.onPause()
-        textToSpeech.stop()
-    }
-
     override fun onDestroy() {
         super.onDestroy()
         textToSpeech.stop()

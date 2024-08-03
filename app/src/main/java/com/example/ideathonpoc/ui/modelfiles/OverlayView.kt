@@ -25,8 +25,15 @@ class OverlayView(context: Context?, attrs: AttributeSet?) : View(context, attrs
     private val padding = 20f
     private val textBounds = Rect()
 
+    private var countdownValue: Int? = null
+    private val countdownPaint = Paint()
+
     init {
         initPaints()
+        countdownPaint.color = Color.WHITE
+        countdownPaint.textSize = 200f
+        countdownPaint.textAlign = Paint.Align.CENTER
+        countdownPaint.isFakeBoldText = true
     }
 
     private fun initPaints() {
@@ -118,6 +125,13 @@ class OverlayView(context: Context?, attrs: AttributeSet?) : View(context, attrs
                 rectTop + rectHeight / 2 + textBounds.height() / 2 - 10  // Centered vertically within the rect
             canvas.drawText(item, textX, textY, textPaint)
         }
+
+        countdownValue?.let { value ->
+            val centerX = width / 2f
+            val centerY = height / 2f
+            val countdownText = if (value == 0) "GO!" else value.toString()
+            canvas.drawText(countdownText, centerX, centerY, countdownPaint)
+        }
     }
 
     fun setResults(boundingBoxes: List<BoundingBox>) {
@@ -131,5 +145,10 @@ class OverlayView(context: Context?, attrs: AttributeSet?) : View(context, attrs
 
     fun setDetectedItems(items: Set<String>) {
         detectedItems.addAll(items)
+    }
+
+    fun setCountdown(value: Int?) {
+        countdownValue = value
+        invalidate()
     }
 }

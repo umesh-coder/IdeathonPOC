@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="title_margin_top">32dp</dimen>
+    <dimen name="title_text_size">24sp</dimen>
+    <dimen name="guideline_margin">20dp</dimen>
+    <dimen name="label_margin_top">16dp</dimen>
+    <dimen name="label_text_size">16sp</dimen>
+    <dimen name="spinner_margin_top">8dp</dimen>
+    <dimen name="card_margin_top">24dp</dimen>
+    <dimen name="card_corner_radius">20dp</dimen>
+    <dimen name="card_elevation">4dp</dimen>
+    <dimen name="capture_button_width">150dp</dimen>
+    <dimen name="capture_button_height">100dp</dimen>
+</resources>
