@@ -1,11 +1,11 @@
 package com.example.ideathonpoc.ui.modelfiles
 
-
 import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Rect
+import android.os.Handler
 import android.util.AttributeSet
 import android.view.View
 import androidx.vectordrawable.graphics.drawable.VectorDrawableCompat
@@ -17,6 +17,7 @@ class OverlayView(context: Context?, attrs: AttributeSet?) : View(context, attrs
     private var requiredItems = listOf<String>()
     private var detectedItems = mutableSetOf<String>()
 
+    private val rectPaintScanning = Paint()
     private val rectPaintDetected = Paint()
     private val rectPaintUndetected = Paint()
     private val textPaint = Paint()
@@ -28,15 +29,24 @@ class OverlayView(context: Context?, attrs: AttributeSet?) : View(context, attrs
     private var countdownValue: Int? = null
     private val countdownPaint = Paint()
 
+    private var isScanning = true  // Flag to check if it's scanning
+
+    private val handler = Handler()
+
     init {
         initPaints()
         countdownPaint.color = Color.WHITE
         countdownPaint.textSize = 200f
         countdownPaint.textAlign = Paint.Align.CENTER
         countdownPaint.isFakeBoldText = true
+        startScanning()
     }
 
     private fun initPaints() {
+        // Paint for scanning items
+        rectPaintScanning.color = Color.parseColor("#5C48DA")
+        rectPaintScanning.style = Paint.Style.FILL
+
         // Paint for detected items (Green background)
         rectPaintDetected.color = Color.parseColor("#4CAF50")
         rectPaintDetected.style = Paint.Style.FILL
@@ -71,15 +81,22 @@ class OverlayView(context: Context?, attrs: AttributeSet?) : View(context, attrs
         val startY = height - totalHeight - 50f  // 50f is extra bottom margin
 
         requiredItems.forEachIndexed { index, item ->
-            val isDetected = detectedItems.contains(item)
-            val rectPaint = if (isDetected) rectPaintDetected else rectPaintUndetected
+
+            val rectPaint = when {
+                isScanning -> rectPaintScanning
+                detectedItems.contains(item) -> rectPaintDetected
+                else -> rectPaintUndetected
+            }
 
             // Measure text size
             textPaint.getTextBounds(item, 0, item.length, textBounds)
             val textWidth = textBounds.width()
 
+            // Adjust width based on scanning state
+            val extraWidthForScanning = if (isScanning) 180f else 0f  // Add extra width during scanning
+            val totalWidth = textWidth + padding * 4 + iconTextSpacing + iconSize + extraWidthForScanning
+
             // Calculate rectangle dimensions
-            val totalWidth = textWidth + padding * 4 + iconTextSpacing + iconSize
             val rectLeft = centerX - totalWidth / 2
             val rectTop = startY + (index * lineHeight)
             val rectRight = rectLeft + totalWidth
@@ -107,9 +124,12 @@ class OverlayView(context: Context?, attrs: AttributeSet?) : View(context, attrs
                 borderPaint
             )
 
-            // Draw SVG
-            // icon
-            val iconRes = if (isDetected) R.drawable.success_icon else R.drawable.failure_icon  // Replace with your actual drawable names
+            // Draw SVG icon
+            val iconRes = when {
+                isScanning -> R.drawable.scan_icon
+                detectedItems.contains(item) -> R.drawable.success_icon
+                else -> R.drawable.failure_icon
+            }
             val iconDrawable = VectorDrawableCompat.create(resources, iconRes, null)
             iconDrawable?.setBounds(
                 rectLeft.toInt() + padding.toInt(),
@@ -121,32 +141,46 @@ class OverlayView(context: Context?, attrs: AttributeSet?) : View(context, attrs
 
             // Draw text
             val textX = rectLeft + padding + iconSize + iconTextSpacing
-            val textY =
-                rectTop + rectHeight / 2 + textBounds.height() / 2 - 10  // Centered vertically within the rect
-            canvas.drawText(item, textX, textY, textPaint)
+            val textY = rectTop + rectHeight / 2 + textBounds.height() / 2 - 10  // Centered vertically within the rect
+            val displayText = if (isScanning) "$item scanning" else item
+            canvas.drawText(displayText, textX, textY, textPaint)
         }
-
         countdownValue?.let { value ->
             val centerX = width / 2f
             val centerY = height / 2f
             val countdownText = if (value == 0) "GO!" else value.toString()
             canvas.drawText(countdownText, centerX, centerY, countdownPaint)
         }
+
     }
+
+
+    private fun startScanning() {
+        // Schedule to stop scanning and show results after 5 seconds
+        handler.postDelayed({
+            isScanning = false
+            invalidate()  // Trigger a redraw to show results
+        }, 5000)  // 5000 milliseconds = 5 seconds
+    }
+
 
     fun setResults(boundingBoxes: List<BoundingBox>) {
         results = boundingBoxes
-//        invalidate()
+        // Optionally invalidate to refresh the view
+        invalidate()
     }
 
     fun setRequiredItems(items: List<String>) {
         requiredItems = items
+        // Optionally invalidate to refresh the view
+        invalidate()
     }
 
     fun setDetectedItems(items: Set<String>) {
         detectedItems.addAll(items)
+        // Optionally invalidate to refresh the view
+        invalidate()
     }
-
     fun setCountdown(value: Int?) {
         countdownValue = value
         invalidate()
