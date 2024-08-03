@@ -11,6 +11,7 @@ import android.graphics.Matrix
 import android.media.MediaPlayer
 import android.net.Uri
 import android.os.Bundle
+import android.os.CountDownTimer
 import android.os.Handler
 import android.os.Looper
 import android.speech.tts.TextToSpeech
@@ -66,6 +67,9 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
     private var isDetectionRunning = false
     private var selectedPermit: String? = null
     private  var mediaPlayer: MediaPlayer = MediaPlayer()
+
+    private val countdownDuration = 4
+    private var countdownTimer: CountDownTimer? = null
 
 
     private val requestPermissionLauncher = registerForActivityResult(
@@ -151,6 +155,7 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
     override fun onDestroyView() {
         super.onDestroyView()
         cleanupResources()
+        countdownTimer?.cancel()
         _binding = null
     }
 
@@ -249,6 +254,23 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
         preview?.setSurfaceProvider(binding.viewFinder.surfaceProvider)
     }
 
+    private fun startCountdown() {
+        countdownTimer = object : CountDownTimer((countdownDuration * 1000).toLong(), 1000) {
+            override fun onTick(millisUntilFinished: Long) {
+                val secondsLeft = (millisUntilFinished / 1000).toInt()
+                binding.overlay.setCountdown(secondsLeft)
+            }
+
+            override fun onFinish() {
+                binding.overlay.setCountdown(null)
+                // Play shutter sound and take screenshot
+                val resID = resources.getIdentifier("shutter_sound", "raw", activity?.packageName)
+                playMedia(context, resID)
+                takeScreenshot()
+            }
+        }.start()
+    }
+
     private fun processImage(imageProxy: ImageProxy) {
         try {
             val bitmapBuffer = Bitmap.createBitmap(
@@ -318,12 +340,16 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
         handler.removeCallbacks(detectionRunnable)
         isDetectionRunning = false
         // This method will be called when all required safety items are detected
+//        startCountdown()
         binding.root.postDelayed({
             val resID = resources.getIdentifier("success_sound", "raw", activity?.packageName)
             playMedia(context,resID)
             Toast.makeText(activity, "Taking your picture dont move",Toast.LENGTH_SHORT).show()
-            takeScreenshot()
+            startCountdown()
         }, 1000)
+
+
+
 
         // Navigate to ResultActivity after a delay
 
@@ -459,6 +485,10 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
 
     private fun takeScreenshot() {
 
+//        startCountdown()
+//        Handler(Looper.getMainLooper()).postDelayed({
+            val resID = resources.getIdentifier("shutter_sound", "raw", activity?.packageName)
+            playMedia(context,resID)
         val imageCapture = ImageCapture.Builder()
             .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
             .setTargetRotation(binding.viewFinder.display.rotation)
@@ -503,7 +533,9 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
                     Log.e(TAG, "Photo capture failed: ${exc.message}", exc)
                 }
             }
+
         )
+//        }, 1000)
     }
 
     private fun adjustImageRotation(photoFile: File) {
