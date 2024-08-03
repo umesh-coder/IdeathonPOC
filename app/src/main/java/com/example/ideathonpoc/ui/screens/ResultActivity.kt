@@ -28,6 +28,8 @@ class ResultActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityResultBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+
         handler.postDelayed(Runnable {
             binding.resultOutputContainer.visibility = View.VISIBLE
             binding.successAnimationView.visibility = View.GONE
@@ -76,8 +78,8 @@ class ResultActivity : AppCompatActivity() {
         super.onDestroy()
         textToSpeech.stop()
         textToSpeech.shutdown()
-
     }
+
 
     companion object {
         private const val TAG = "ResultActivity"

@@ -543,8 +543,11 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
     }
 
     private fun navigateToResultActivity(imagePath: String, timestamp: Long) {
-
         Handler(Looper.getMainLooper()).postDelayed({
+            // Get the FragmentManager
+            val fragmentManager = requireActivity().supportFragmentManager
+            // Pop the current fragment from the back stack
+            fragmentManager.popBackStack()
             val intent = Intent(requireContext(), ResultActivity::class.java).apply {
                 putExtra("imagePath", imagePath)
                 putExtra("timestamp", timestamp)
