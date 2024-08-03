@@ -67,6 +67,8 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
     private var selectedPermit: String? = null
     private  var mediaPlayer: MediaPlayer = MediaPlayer()
 
+    private var isFragmentVisible = true
+
 
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
@@ -141,9 +143,11 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
 
     override fun onPause() {
         super.onPause()
+        isFragmentVisible = false
+        cleanupResources()
+
         try {
-            imageAnalyzer?.clearAnalyzer()
-            cameraProvider?.unbindAll()
+            cleanupResources()
         } catch (e: Exception) {
         }
     }
@@ -151,6 +155,7 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
     override fun onDestroyView() {
         super.onDestroyView()
         cleanupResources()
+        textToSpeech.shutdown()
         _binding = null
     }
 
@@ -177,7 +182,7 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
             cameraProvider?.unbindAll()
             detector.clear()
             textToSpeech.stop()
-            textToSpeech.shutdown()
+
             cameraExecutor.shutdownNow()
         } catch (e: Exception) {
         }
@@ -284,6 +289,13 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
         }
     }
 
+    private fun isFragmentDisplayed(): Boolean {
+        val isDisplayed = isFragmentVisible && isAdded && !isDetached && !isRemoving && view != null && view?.windowToken != null && view?.visibility == View.VISIBLE
+        if (!isDisplayed) {
+            cleanupResources()
+        }
+        return isDisplayed
+    }
     private fun allPermissionsGranted() = REQUIRED_PERMISSIONS.all {
         ContextCompat.checkSelfPermission(requireContext(), it) == PackageManager.PERMISSION_GRANTED
     }
@@ -294,6 +306,11 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
         }
     }
 
+    override fun onResume() {
+        super.onResume()
+        isFragmentVisible = true
+
+    }
     override fun onDetect(boundingBoxes: List<BoundingBox>, inferenceTime: Long) {
         _binding?.let { binding ->
             binding.root.post {
@@ -308,6 +325,11 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
 
     }
 
+    override fun onStop() {
+        super.onStop()
+        cleanupResources()
+
+    }
     companion object {
         private const val TAG = "CameraFragment"
         private const val DETECTION_TIMEOUT = 10000L
@@ -318,6 +340,9 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
         handler.removeCallbacks(detectionRunnable)
         isDetectionRunning = false
         // This method will be called when all required safety items are detected
+        if(!isFragmentVisible){
+            return
+        }
         binding.root.postDelayed({
             val resID = resources.getIdentifier("success_sound", "raw", activity?.packageName)
             playMedia(context,resID)
@@ -330,6 +355,9 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
     }
 
     private fun startDetectionTimer() {
+        if(!isFragmentVisible){
+            return
+        }
         detectionRunnable = Runnable {
             if (isDetectionRunning) {
                 handler.removeCallbacks(detectionRunnable)
@@ -376,6 +404,9 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
             } else {
                 textToSpeech.setLanguage(Locale.ENGLISH)
             }
+            if(!isFragmentVisible){
+                return
+            }
             textToSpeech.speak(message, TextToSpeech.QUEUE_FLUSH, null, null)
 
             val dialog = AlertDialog.Builder(requireContext())
@@ -385,6 +416,7 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
                 .create()
 
             dialog.setButton(AlertDialog.BUTTON_POSITIVE, "Rescan") { _, _ ->
+                textToSpeech.stop()
                 detector.detectedItems
                 startDetectionTimer()
             }
@@ -393,6 +425,7 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
 
             positiveButton.setOnClickListener {
                 dialog.dismiss()
+                textToSpeech.stop()
                 detector.detectedItems
                 isDetectionRunning = true
                 analyzeImage()
