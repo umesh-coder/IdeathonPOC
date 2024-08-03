@@ -80,6 +80,10 @@ class ResultActivity : AppCompatActivity() {
         textToSpeech.shutdown()
     }
 
+    override fun onPause() {
+        super.onPause()
+        textToSpeech.stop()
+    }
 
     companion object {
         private const val TAG = "ResultActivity"
