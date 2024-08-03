@@ -2,7 +2,10 @@ package com.example.ideathonpoc.ui.modelfiles
 
 
 import android.content.Context
-import android.graphics.*
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.Paint
+import android.graphics.Rect
 import android.util.AttributeSet
 import android.view.View
 import androidx.vectordrawable.graphics.drawable.VectorDrawableCompat
@@ -20,6 +23,7 @@ class OverlayView(context: Context?, attrs: AttributeSet?) : View(context, attrs
     private val borderPaint = Paint()
     private val iconSize = 80 // Size for the icons
     private val padding = 20f
+    private val textBounds = Rect()
 
     init {
         initPaints()
@@ -62,11 +66,9 @@ class OverlayView(context: Context?, attrs: AttributeSet?) : View(context, attrs
         requiredItems.forEachIndexed { index, item ->
             val isDetected = detectedItems.contains(item)
             val rectPaint = if (isDetected) rectPaintDetected else rectPaintUndetected
-            val statusText = item
 
             // Measure text size
-            val textBounds = Rect()
-            textPaint.getTextBounds(statusText, 0, statusText.length, textBounds)
+            textPaint.getTextBounds(item, 0, item.length, textBounds)
             val textWidth = textBounds.width()
 
             // Calculate rectangle dimensions
@@ -98,7 +100,8 @@ class OverlayView(context: Context?, attrs: AttributeSet?) : View(context, attrs
                 borderPaint
             )
 
-            // Draw SVG icon
+            // Draw SVG
+            // icon
             val iconRes = if (isDetected) R.drawable.success_icon else R.drawable.failure_icon  // Replace with your actual drawable names
             val iconDrawable = VectorDrawableCompat.create(resources, iconRes, null)
             iconDrawable?.setBounds(
@@ -113,7 +116,7 @@ class OverlayView(context: Context?, attrs: AttributeSet?) : View(context, attrs
             val textX = rectLeft + padding + iconSize + iconTextSpacing
             val textY =
                 rectTop + rectHeight / 2 + textBounds.height() / 2 - 10  // Centered vertically within the rect
-            canvas.drawText(statusText, textX, textY, textPaint)
+            canvas.drawText(item, textX, textY, textPaint)
         }
     }
 
@@ -124,11 +127,9 @@ class OverlayView(context: Context?, attrs: AttributeSet?) : View(context, attrs
 
     fun setRequiredItems(items: List<String>) {
         requiredItems = items
-//        invalidate()
     }
 
     fun setDetectedItems(items: Set<String>) {
         detectedItems.addAll(items)
-//        invalidate()
     }
 }
