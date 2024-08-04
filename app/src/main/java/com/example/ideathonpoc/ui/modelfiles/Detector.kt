@@ -27,7 +27,8 @@ class Detector(
     private val modelPath: String,
     private val labelPath: String,
     private val detectorListener: DetectorListener,
-    private val requiredSafetyItems: List<String>
+    private val requiredSafetyItems: List<String>,
+    private val requiredHelmetColor:String
 ) {
 
     private var interpreter: Interpreter? = null
@@ -37,6 +38,7 @@ class Detector(
     private var tensorHeight = 0
     private var numChannel = 0
     private var numElements = 0
+    private var maxOccuringHelmetColor:String?=null
 
     private val imageProcessor = ImageProcessor.Builder()
         .add(NormalizeOp(INPUT_MEAN, INPUT_STANDARD_DEVIATION))
@@ -172,6 +174,7 @@ class Detector(
             Log.e("box", "detect: ${bestBoxes.map { it.helmetColor }}", )
 
 
+            maxOccuringHelmetColor = bestBoxes!!.filter { it.clsName == "Helmet" }.groupingBy { it.helmetColor }.eachCount().maxByOrNull { it.value }?.key
             detectorListener.onDetect(bestBoxes, inferenceTime)
         }
 
@@ -278,7 +281,14 @@ class Detector(
 
                     // Mark the item as detected
                     if ( clsName in requiredSafetyItems ) {
-                        detectedItems.add(clsName)
+                        if(clsName=="Helmet"){
+                            if(requiredHelmetColor==maxOccuringHelmetColor){
+                                detectedItems.add(clsName)
+                            }
+                        }
+                        else {
+                            detectedItems.add(clsName)
+                        }
                     }
                 }
             }

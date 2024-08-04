@@ -18,9 +18,11 @@ import android.speech.tts.TextToSpeech
 import android.text.Html
 import android.util.Log
 import android.util.Size
+import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
@@ -140,7 +142,8 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
             Constants.MODEL_PATH,
             Constants.LABELS_PATH,
             this,
-            requiredSafetyItems
+            requiredSafetyItems,
+            "White"
         )
         detector.setup()
     }
@@ -363,13 +366,32 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
         binding.root.postDelayed({
             val resID = resources.getIdentifier("success_sound", "raw", activity?.packageName)
             playMedia(context,resID)
-            Toast.makeText(activity, "Taking your picture dont move",Toast.LENGTH_SHORT).show()
+//            Toast.makeText(activity, "Taking your picture dont move",Toast.LENGTH_SHORT).show()
+            showCustomMessageAtTop("Taking Your Picture Please Don't Move")
             startCountdown()
         }, 1000)
 
 
         // Navigate to ResultActivity after a delay
 
+    }
+
+    private fun showCustomMessageAtTop(message: String) {
+        val inflater = layoutInflater
+        val layout = inflater.inflate(R.layout.toast_layout, null)
+
+        val textView = layout.findViewById<TextView>(R.id.toast_text)
+        textView.text = message
+
+        val toast = Toast(context)
+        toast.setGravity(Gravity.TOP or Gravity.FILL_HORIZONTAL, 0, dpToPx(150))
+        toast.duration = Toast.LENGTH_SHORT
+        toast.view = layout
+        toast.show()
+    }
+
+    private fun dpToPx(dp: Int): Int {
+        return (dp * resources.displayMetrics.density).toInt()
     }
 
     private fun startDetectionTimer() {

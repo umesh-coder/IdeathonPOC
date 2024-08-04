@@ -32,7 +32,7 @@ class OverlayView(context: Context?, attrs: AttributeSet?) : View(context, attrs
     private var isScanning = true  // Flag to check if it's scanning
 
     private val handler = Handler()
-    private val requiredHelmetColor = "White"
+    private var requiredHelmetColor = "White"
 
     init {
         initPaints()
@@ -43,6 +43,10 @@ class OverlayView(context: Context?, attrs: AttributeSet?) : View(context, attrs
         startScanning()
     }
 
+    fun setRequiredHelmetColor(color: String) {
+        requiredHelmetColor = color
+
+    }
     private fun getMostFrequentHelmetColor(): String? {
         val colorCounts = results
             .filter { it.clsName == "Helmet" && it.helmetColor != null }
@@ -96,8 +100,8 @@ class OverlayView(context: Context?, attrs: AttributeSet?) : View(context, attrs
             val helmetColorMatched = isHelmet && helmetDetected && mostFrequentHelmetColor == requiredHelmetColor
             val rectPaint = when {
                 isScanning -> rectPaintScanning
-                isHelmet && helmetColorMatched -> rectPaintDetected
-                detectedItems.contains(item) && !isHelmet -> rectPaintDetected
+//                isHelmet && helmetColorMatched -> rectPaintDetected
+                detectedItems.contains(item)  -> rectPaintDetected
                 else -> rectPaintUndetected
             }
 
@@ -140,8 +144,8 @@ class OverlayView(context: Context?, attrs: AttributeSet?) : View(context, attrs
             // Draw SVG icon
             val iconRes = when {
                 isScanning -> R.drawable.scan_icon
-                isHelmet && helmetColorMatched -> R.drawable.success_icon
-                detectedItems.contains(item) && !isHelmet -> R.drawable.success_icon
+//                isHelmet && helmetColorMatched -> R.drawable.success_icon
+                detectedItems.contains(item)  -> R.drawable.success_icon
                 else -> R.drawable.failure_icon
             }
             val iconDrawable = VectorDrawableCompat.create(resources, iconRes, null)
