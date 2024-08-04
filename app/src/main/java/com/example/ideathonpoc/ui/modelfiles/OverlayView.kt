@@ -32,6 +32,7 @@ class OverlayView(context: Context?, attrs: AttributeSet?) : View(context, attrs
     private var isScanning = true  // Flag to check if it's scanning
 
     private val handler = Handler()
+    private val requiredHelmetColor = "White"
 
     init {
         initPaints()
@@ -42,6 +43,14 @@ class OverlayView(context: Context?, attrs: AttributeSet?) : View(context, attrs
         startScanning()
     }
 
+    private fun getMostFrequentHelmetColor(): String? {
+        val colorCounts = results
+            .filter { it.clsName == "Helmet" && it.helmetColor != null }
+            .groupBy { it.helmetColor }
+            .mapValues { it.value.size }
+
+        return colorCounts.maxByOrNull { it.value }?.key
+    }
     private fun initPaints() {
         // Paint for scanning items
         rectPaintScanning.color = Color.parseColor("#5C48DA")
@@ -75,16 +84,20 @@ class OverlayView(context: Context?, attrs: AttributeSet?) : View(context, attrs
         val rectHeight = 100f
         val rectCornerRadius = 50f
         val iconTextSpacing = 5f  // Spacing between icon and text
+        val mostFrequentHelmetColor = getMostFrequentHelmetColor()
 
         // Calculate the starting Y position to draw elements at the bottom center
         val totalHeight = requiredItems.size * lineHeight
         val startY = height - totalHeight - 50f  // 50f is extra bottom margin
 
         requiredItems.forEachIndexed { index, item ->
-
+            val isHelmet = item.contains("Helmet", ignoreCase = true)
+            val helmetDetected = results.any { it.clsName == "Helmet" }
+            val helmetColorMatched = isHelmet && helmetDetected && mostFrequentHelmetColor == requiredHelmetColor
             val rectPaint = when {
                 isScanning -> rectPaintScanning
-                detectedItems.contains(item) -> rectPaintDetected
+                isHelmet && helmetColorMatched -> rectPaintDetected
+                detectedItems.contains(item) && !isHelmet -> rectPaintDetected
                 else -> rectPaintUndetected
             }
 
@@ -127,7 +140,8 @@ class OverlayView(context: Context?, attrs: AttributeSet?) : View(context, attrs
             // Draw SVG icon
             val iconRes = when {
                 isScanning -> R.drawable.scan_icon
-                detectedItems.contains(item) -> R.drawable.success_icon
+                isHelmet && helmetColorMatched -> R.drawable.success_icon
+                detectedItems.contains(item) && !isHelmet -> R.drawable.success_icon
                 else -> R.drawable.failure_icon
             }
             val iconDrawable = VectorDrawableCompat.create(resources, iconRes, null)

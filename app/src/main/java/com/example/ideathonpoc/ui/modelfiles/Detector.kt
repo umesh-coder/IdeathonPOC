@@ -2,6 +2,7 @@ package com.example.ideathonpoc.ui.modelfiles
 
 import android.content.Context
 import android.graphics.Bitmap
+import android.graphics.Color
 import android.os.SystemClock
 import android.util.Log
 import org.tensorflow.lite.DataType
@@ -16,6 +17,10 @@ import java.io.BufferedReader
 import java.io.IOException
 import java.io.InputStream
 import java.io.InputStreamReader
+import kotlin.math.log
+import kotlin.math.pow
+import kotlin.math.roundToInt
+import kotlin.math.sqrt
 
 class Detector(
     private val context: Context,
@@ -38,6 +43,24 @@ class Detector(
         .add(CastOp(INPUT_IMAGE_TYPE))
         .build()
 
+    fun findNearestLimitedColor(rgb: Int): String {
+        val red = Color.red(rgb)
+        val green = Color.green(rgb)
+        val blue = Color.blue(rgb)
+
+        return limitedColors.minByOrNull { namedColor ->
+            val namedRed = Color.red(namedColor.rgb)
+            val namedGreen = Color.green(namedColor.rgb)
+            val namedBlue = Color.blue(namedColor.rgb)
+
+            val distance = sqrt(
+                (namedRed - red).toDouble().pow(2.0) +
+                        (namedGreen - green).toDouble().pow(2.0) +
+                        (namedBlue - blue).toDouble().pow(2.0)
+            )
+            distance
+        }?.name ?: "Unknown"
+    }
     fun setup() {
         val model = FileUtil.loadMappedFile(context, modelPath)
         val options = Interpreter.Options()
@@ -67,6 +90,42 @@ class Detector(
         } catch (e: IOException) {
             e.printStackTrace()
         }
+    }
+    fun analyzeColorInBoundingBox(frame: Bitmap, box: BoundingBox): String {
+        val x = (box.x1 * frame.width).roundToInt()
+        val y = (box.y1 * frame.height).roundToInt()
+        val width = ((box.x2 - box.x1) * frame.width).roundToInt()
+        val height = ((box.y2 - box.y1) * frame.height).roundToInt()
+
+        // Ensure we don't go out of bounds
+        val safeX = x.coerceIn(0, frame.width - 1)
+        val safeY = y.coerceIn(0, frame.height - 1)
+        val safeWidth = width.coerceAtMost(frame.width - safeX)
+        val safeHeight = height.coerceAtMost(frame.height - safeY)
+
+        var redSum = 0
+        var greenSum = 0
+        var blueSum = 0
+        var pixelCount = 0
+
+        for (i in safeX until (safeX + safeWidth)) {
+            for (j in safeY until (safeY + safeHeight)) {
+                val pixel = frame.getPixel(i, j)
+                redSum += Color.red(pixel)
+                greenSum += Color.green(pixel)
+                blueSum += Color.blue(pixel)
+                pixelCount++
+            }
+        }
+
+        // Calculate average color
+        val avgRed = (redSum / pixelCount).coerceIn(0, 255)
+        val avgGreen = (greenSum / pixelCount).coerceIn(0, 255)
+        val avgBlue = (blueSum / pixelCount).coerceIn(0, 255)
+
+        val avgColor = Color.rgb(avgRed, avgGreen, avgBlue)
+        val nearestColorName = findNearestLimitedColor(avgColor)
+        return nearestColorName
     }
 
     fun clear() {
@@ -102,6 +161,17 @@ class Detector(
         if (bestBoxes == null) {
             detectorListener.onEmptyDetect()
         }else {
+            bestBoxes.map { box ->
+                if (box.clsName == "Helmet") {
+                    val color = analyzeColorInBoundingBox(frame, box)
+                    box.helmetColor = color
+//                    Log.e("Helmet color", "detect: $color", )
+                }
+//                Log.e("box", "detect: ${box.helmetColor}", )
+            }
+            Log.e("box", "detect: ${bestBoxes.map { it.helmetColor }}", )
+
+
             detectorListener.onDetect(bestBoxes, inferenceTime)
         }
 
@@ -202,7 +272,7 @@ class Detector(
                         BoundingBox(
                             x1 = x1, y1 = y1, x2 = x2, y2 = y2,
                             cx = cx, cy = cy, w = w, h = h,
-                            cnf = maxConf, cls = maxIdx, clsName = clsName
+                            cnf = maxConf, cls = maxIdx, clsName = clsName, helmetColor =""
                         )
                     )
 
@@ -274,3 +344,10 @@ class Detector(
         private const val IOU_THRESHOLD = 0.5F
     }
 }
+data class NamedColor(val name: String, val rgb: Int)
+
+val limitedColors = listOf(
+    NamedColor("White", Color.rgb(255, 255, 255)),
+    NamedColor("Orange", Color.rgb(255, 165, 0)),
+    NamedColor("Blue", Color.rgb(0, 0, 255))
+)

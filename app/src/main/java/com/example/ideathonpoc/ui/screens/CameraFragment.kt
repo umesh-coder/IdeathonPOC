@@ -228,6 +228,7 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
             return
         }
 
+
         try {
             val rotation = binding.viewFinder.display.rotation
 
