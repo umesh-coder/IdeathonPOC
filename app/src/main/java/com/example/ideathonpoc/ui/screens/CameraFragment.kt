@@ -68,7 +68,7 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
     private lateinit var detectionRunnable: Runnable
     private var isDetectionRunning = false
     private var selectedPermit: String? = null
-    private  var mediaPlayer: MediaPlayer = MediaPlayer()
+    private var mediaPlayer: MediaPlayer = MediaPlayer()
 
     private val countdownDuration = 4
     private var countdownTimer: CountDownTimer? = null
@@ -105,8 +105,6 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         binding.overlay.setRequiredItems(requiredSafetyItems)
-
-
         try {
             initializeDetector()
 
@@ -231,7 +229,6 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
             return
         }
 
-
         try {
             val rotation = binding.viewFinder.display.rotation
 
@@ -241,7 +238,6 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
                 .build()
 
             analyzeImage()
-
 
 
         } catch (exc: Exception) {
@@ -344,12 +340,22 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
                 binding.inferenceTime.text = "${inferenceTime}ms"
                 binding.overlay.apply {
                     setDetectedItems(detector.detectedItems)
+                    setGlovesCountListener(detector)
+                    setShoesCountListener(detector)
                     setResults(boundingBoxes)
                     invalidate()
                 }
             }
         }
+    }
 
+
+    override fun onShoesCountUpdated(count: Int) {
+        detector.onGlovesCountUpdated(count)
+    }
+
+    override fun onGlovesCountUpdated(count: Int) {
+        detector.onGlovesCountUpdated(count)
     }
 
     companion object {
@@ -366,8 +372,7 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
         binding.root.postDelayed({
             val resID = resources.getIdentifier("success_sound", "raw", activity?.packageName)
             playMedia(context,resID)
-//            Toast.makeText(activity, "Taking your picture dont move",Toast.LENGTH_SHORT).show()
-            showCustomMessageAtTop("Taking Your Picture Please Don't Move")
+            Toast.makeText(activity, "Taking your picture dont move",Toast.LENGTH_SHORT).show()
             startCountdown()
         }, 1000)
 

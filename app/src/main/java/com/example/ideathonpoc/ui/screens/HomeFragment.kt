@@ -21,7 +21,7 @@ class HomeFragment : Fragment() {
     private val permitMap = mapOf(
         "General Permit" to listOf("Helmet", "Safety Vest"),
         "Special Permit" to listOf("Gloves", "Safety Vest"),
-        "High-Risk Permit" to listOf("Helmet", "Safety Vest", "Gloves")
+        "High-Risk Permit" to listOf("Helmet", "Safety Vest", "Gloves","Safety Glasses","Safety Shoe","Mask")
     )
     private var selectedPermit: String? = null
     private var selectedScanType: String? = null
