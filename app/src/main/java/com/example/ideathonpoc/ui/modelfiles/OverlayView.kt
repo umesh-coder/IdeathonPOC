@@ -8,10 +8,15 @@ import android.graphics.Rect
 import android.os.Handler
 import android.util.AttributeSet
 import android.view.View
+import android.widget.Toast
 import androidx.vectordrawable.graphics.drawable.VectorDrawableCompat
 import com.example.ideathonpoc.R
 
 class OverlayView(context: Context?, attrs: AttributeSet?) : View(context, attrs) {
+
+    private var glovesCountListener: GlovesCountListener? = null
+    private var shoesCountListener: ShoesCountListener? = null
+
 
     private var results = listOf<BoundingBox>()
     private var requiredItems = listOf<String>()
@@ -32,6 +37,7 @@ class OverlayView(context: Context?, attrs: AttributeSet?) : View(context, attrs
     private var isScanning = true  // Flag to check if it's scanning
 
     private val handler = Handler()
+    private var gloves_count : Int = 0
 
     init {
         initPaints()
@@ -176,7 +182,28 @@ class OverlayView(context: Context?, attrs: AttributeSet?) : View(context, attrs
         invalidate()
     }
 
+    private fun setCount() {
+        val gloves = results.count { it.clsName == "Gloves" }
+        val shoes = results.count { it.clsName == "Safety Shoe" }
+        // Notify listener about the gloves count
+        glovesCountListener?.onGlovesCountUpdated(gloves)
+        shoesCountListener?.onShoesCountUpdated(shoes)
+
+    }
+
+    fun setGlovesCountListener(listener: GlovesCountListener) {
+        glovesCountListener = listener
+//        invalidate()
+    }
+
+    fun setShoesCountListener(listener: ShoesCountListener) {
+        shoesCountListener = listener
+//        invalidate()
+    }
+
+
     fun setDetectedItems(items: Set<String>) {
+        setCount()
         detectedItems.addAll(items)
         // Optionally invalidate to refresh the view
         invalidate()
@@ -184,5 +211,13 @@ class OverlayView(context: Context?, attrs: AttributeSet?) : View(context, attrs
     fun setCountdown(value: Int?) {
         countdownValue = value
         invalidate()
+    }
+
+    interface GlovesCountListener {
+        fun onGlovesCountUpdated(count: Int)
+    }
+
+    interface ShoesCountListener {
+        fun onShoesCountUpdated(count: Int)
     }
 }

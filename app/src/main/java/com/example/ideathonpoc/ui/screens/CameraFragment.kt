@@ -66,7 +66,7 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
     private lateinit var detectionRunnable: Runnable
     private var isDetectionRunning = false
     private var selectedPermit: String? = null
-    private  var mediaPlayer: MediaPlayer = MediaPlayer()
+    private var mediaPlayer: MediaPlayer = MediaPlayer()
 
     private val countdownDuration = 4
     private var countdownTimer: CountDownTimer? = null
@@ -103,8 +103,6 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         binding.overlay.setRequiredItems(requiredSafetyItems)
-
-
         try {
             initializeDetector()
 
@@ -239,7 +237,6 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
             analyzeImage()
 
 
-
         } catch (exc: Exception) {
             Log.e(TAG, "Use case binding failed", exc)
             navigateBack()
@@ -340,12 +337,22 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
                 binding.inferenceTime.text = "${inferenceTime}ms"
                 binding.overlay.apply {
                     setDetectedItems(detector.detectedItems)
+                    setGlovesCountListener(detector)
+                    setShoesCountListener(detector)
                     setResults(boundingBoxes)
                     invalidate()
                 }
             }
         }
+    }
 
+
+    override fun onShoesCountUpdated(count: Int) {
+        detector.onGlovesCountUpdated(count)
+    }
+
+    override fun onGlovesCountUpdated(count: Int) {
+        detector.onGlovesCountUpdated(count)
     }
 
     companion object {
@@ -361,8 +368,8 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
 //        startCountdown()
         binding.root.postDelayed({
             val resID = resources.getIdentifier("success_sound", "raw", activity?.packageName)
-            playMedia(context,resID)
-            Toast.makeText(activity, "Taking your picture dont move",Toast.LENGTH_SHORT).show()
+            playMedia(context, resID)
+            Toast.makeText(activity, "Taking your picture dont move", Toast.LENGTH_SHORT).show()
             startCountdown()
         }, 1000)
 
@@ -372,7 +379,7 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
     }
 
     private fun startDetectionTimer() {
-        if(!isFragmentVisible){
+        if (!isFragmentVisible) {
             return
         }
         detectionRunnable = Runnable {
@@ -380,7 +387,7 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
                 handler.removeCallbacks(detectionRunnable)
                 isDetectionRunning = false
                 val resID = resources.getIdentifier("failure_sound", "raw", activity?.packageName)
-                playMedia(context,resID)
+                playMedia(context, resID)
                 showMissingItemsDialog()
 
             }
@@ -393,7 +400,7 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
         try {
             mediaPlayer = MediaPlayer.create(context, resID)
             mediaPlayer.start()
-            handler.postDelayed({  mediaPlayer.stop()},2000)
+            handler.postDelayed({ mediaPlayer.stop() }, 2000)
 
         } catch (exception: Exception) {
             exception.printStackTrace()
@@ -421,7 +428,7 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
             } else {
                 textToSpeech.setLanguage(Locale.ENGLISH)
             }
-            if(!isFragmentVisible){
+            if (!isFragmentVisible) {
                 return
             }
             textToSpeech.speak(message, TextToSpeech.QUEUE_FLUSH, null, null)
@@ -447,7 +454,6 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
                 isDetectionRunning = true
                 analyzeImage()
                 startDetectionTimer()
-
 
 
             }
@@ -513,8 +519,8 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
 
 //        startCountdown()
 //        Handler(Looper.getMainLooper()).postDelayed({
-            val resID = resources.getIdentifier("shutter_sound", "raw", activity?.packageName)
-            playMedia(context,resID)
+        val resID = resources.getIdentifier("shutter_sound", "raw", activity?.packageName)
+        playMedia(context, resID)
         val imageCapture = ImageCapture.Builder()
             .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
             .setTargetRotation(binding.viewFinder.display.rotation)

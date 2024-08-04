@@ -23,7 +23,7 @@ class Detector(
     private val labelPath: String,
     private val detectorListener: DetectorListener,
     private val requiredSafetyItems: List<String>
-) {
+) : OverlayView.GlovesCountListener , OverlayView.ShoesCountListener{
 
     private var interpreter: Interpreter? = null
     private var labels = mutableListOf<String>()
@@ -32,11 +32,21 @@ class Detector(
     private var tensorHeight = 0
     private var numChannel = 0
     private var numElements = 0
+    private var glovesCount = 0
+    private var shoesCount = 0
 
     private val imageProcessor = ImageProcessor.Builder()
         .add(NormalizeOp(INPUT_MEAN, INPUT_STANDARD_DEVIATION))
         .add(CastOp(INPUT_IMAGE_TYPE))
         .build()
+
+    override fun onGlovesCountUpdated(count: Int) {
+        glovesCount = count
+    }
+
+    override fun onShoesCountUpdated(count: Int) {
+        shoesCount = count
+    }
 
     fun setup() {
         val model = FileUtil.loadMappedFile(context, modelPath)
@@ -185,8 +195,10 @@ class Detector(
                 arrayIdx += numElements
             }
 
-            if (maxConf > CONFIDENCE_THRESHOLD) {
-                val clsName = labels[maxIdx]
+            val clsName = labels[maxIdx]
+            val threshold = if (clsName == "Gloves") 0.3F else CONFIDENCE_THRESHOLD
+
+            if (maxConf >= threshold) {
                 if (clsName !in excludeClasses) {
                     val cx = array[c]
                     val cy = array[c + numElements]
@@ -206,9 +218,11 @@ class Detector(
                         )
                     )
 
-                    // Mark the item as detected
-                    if ( clsName in requiredSafetyItems ) {
-                        detectedItems.add(clsName)
+                    // Handle detected items based on class
+                    when (clsName) {
+                        "Gloves" -> if (glovesCount == 2) detectedItems.add(clsName)
+                        "Safety Shoe" -> if (shoesCount == 2) detectedItems.add(clsName)
+                        in requiredSafetyItems -> detectedItems.add(clsName)
                     }
                 }
             }
@@ -217,14 +231,14 @@ class Detector(
         // Check if all required items have been detected
         if (detectedItems.size == requiredSafetyItems.size && detectedItems.containsAll(requiredSafetyItems)) {
             detectorListener.onAllRequiredItemsDetected()
-//            detectedItems.clear()
+            // Clear detected items if needed
+            // detectedItems.clear()
         }
 
         if (boundingBoxes.isEmpty()) return null
 
         return applyNMS(boundingBoxes)
     }
-
 
     private fun applyNMS(boxes: List<BoundingBox>): MutableList<BoundingBox> {
         val sortedBoxes = boxes.sortedByDescending { it.cnf }.toMutableList()
@@ -263,6 +277,8 @@ class Detector(
         fun onEmptyDetect()
         fun onDetect(boundingBoxes: List<BoundingBox>, inferenceTime: Long)
         fun onAllRequiredItemsDetected()
+        fun onGlovesCountUpdated(count: Int)
+        fun onShoesCountUpdated(count: Int)
     }
 
     companion object {
@@ -270,7 +286,7 @@ class Detector(
         private const val INPUT_STANDARD_DEVIATION = 255f
         private val INPUT_IMAGE_TYPE = DataType.FLOAT32
         private val OUTPUT_IMAGE_TYPE = DataType.FLOAT32
-        private const val CONFIDENCE_THRESHOLD = 0.5F
+        private  var CONFIDENCE_THRESHOLD = 0.7F
         private const val IOU_THRESHOLD = 0.5F
     }
 }
