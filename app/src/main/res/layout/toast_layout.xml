@@ -21,10 +21,10 @@
             app:tint="#5C48DA" />
 
         <TextView
+            android:textAlignment="center"
             android:id="@+id/toast_text"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical"
             android:layout_marginStart="12dp"
             android:text="Taking Your Picture Please Don't Move"
             android:textStyle="bold"

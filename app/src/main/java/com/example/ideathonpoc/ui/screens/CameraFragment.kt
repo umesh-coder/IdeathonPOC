@@ -94,6 +94,7 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
         _binding = FragmentCameraBinding.inflate(inflater, container, false)
         requiredSafetyItems = arguments?.getStringArrayList("REQUIRED_ITEMS") ?: listOf()
         selectedPermit = arguments?.getString("PERMIT")
+        binding.overlay.setRequiredHelmetColor("White")
         textToSpeech = TextToSpeech(requireContext()) { status ->
             if (status == TextToSpeech.SUCCESS) {
                 textToSpeech.language = Locale.UK
@@ -372,7 +373,8 @@ class CameraFragment : Fragment(), Detector.DetectorListener {
         binding.root.postDelayed({
             val resID = resources.getIdentifier("success_sound", "raw", activity?.packageName)
             playMedia(context,resID)
-            Toast.makeText(activity, "Taking your picture dont move",Toast.LENGTH_SHORT).show()
+//            Toast.makeText(activity, "Taking your picture dont move",Toast.LENGTH_SHORT).show()
+            showCustomMessageAtTop("Taking Your Picture Please Don't Move..")
             startCountdown()
         }, 1000)
 

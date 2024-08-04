@@ -297,10 +297,11 @@ class Detector(
                         "Gloves" -> if (glovesCount == 2) detectedItems.add(clsName)
                         "Safety Shoe" -> if (shoesCount == 2) detectedItems.add(clsName)
                         "Helmet" -> {
-                            if(requiredHelmetColor==maxOccuringHelmetColor){
+                            if (requiredHelmetColor == maxOccuringHelmetColor) {
                                 detectedItems.add(clsName)
                             }
                         }
+
                         else -> detectedItems.add(clsName)
 
                   }

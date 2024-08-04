@@ -59,7 +59,7 @@ class HomeFragment : Fragment() {
         val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, permits)
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         permitSpinner.adapter = adapter
-        selectedPermit = permits[2]
+        selectedPermit = permits[1]
       /*  permitSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>, view: View, position: Int, id: Long) {
                 selectedPermit = permits[position]
