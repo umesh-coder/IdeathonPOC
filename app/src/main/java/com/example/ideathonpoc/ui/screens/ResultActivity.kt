@@ -84,7 +84,11 @@ class ResultActivity : AppCompatActivity() {
         super.onPause()
         textToSpeech.stop()
     }
-
+    override fun onResume() {
+        super.onResume()
+        textToSpeech.stop()
+        
+    }
     companion object {
         private const val TAG = "ResultActivity"
     }
